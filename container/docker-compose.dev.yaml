@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: air
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=dev
+      - DB_HOST=db
+      - DB_PORT=27017
+      - DB_NAME=go_hex
+      - DB_USERNAME=root
+      - DB_PASSWORD=password
+      - JWT_SECRET=secret
+      - JWT_EXPIRESIN=1h
+    depends_on:
+      - db
+    volumes:
+      - ./..:/app
+
+  db:
+    # mongodb
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=go_hex
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

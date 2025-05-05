@@ -1,0 +1,15 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  tidy:
+    cmds:
+      - go mod tidy
+      - go mod vendor
+  dev:
+    cmds:
+      - docker compose -f container/docker-compose.dev.yaml up --build
+  gen:
+    cmds:
+      - oapi-codegen -generate types,gin -o internal/adapter/handler/http/apigen/apigen.go -package apigen docs/server/doc.yaml
