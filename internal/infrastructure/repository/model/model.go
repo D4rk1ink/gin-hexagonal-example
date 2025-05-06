@@ -1,4 +1,4 @@
-package model
+package repository_model
 
 import (
 	"time"

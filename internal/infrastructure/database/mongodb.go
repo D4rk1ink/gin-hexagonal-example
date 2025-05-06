@@ -9,23 +9,30 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type MongoDb struct {
+type MongoDb interface {
+	Connect() error
+	Disconnect(ctx context.Context)
+	GetDb() *mongo.Database
+	GetClient() *mongo.Client
+}
+
+type mongoDb struct {
 	options *options.ClientOptions
 	client  *mongo.Client
 	Db      *mongo.Database
 }
 
-func NewMongodb() (*MongoDb, error) {
+func NewMongodb() (MongoDb, error) {
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", config.Config.Database.Username, config.Config.Database.Password, config.Config.Database.Host, config.Config.Database.Port)
 
-	return &MongoDb{
+	return &mongoDb{
 		options: options.
 			Client().
 			ApplyURI(uri),
 	}, nil
 }
 
-func (m *MongoDb) Connect() error {
+func (m *mongoDb) Connect() error {
 	client, err := mongo.Connect(m.options)
 	if err != nil {
 		return err
@@ -43,6 +50,14 @@ func (m *MongoDb) Connect() error {
 	return nil
 }
 
-func (m *MongoDb) Disconnect(ctx context.Context) {
+func (m *mongoDb) Disconnect(ctx context.Context) {
 	m.client.Disconnect(ctx)
+}
+
+func (m *mongoDb) GetDb() *mongo.Database {
+	return m.Db
+}
+
+func (m *mongoDb) GetClient() *mongo.Client {
+	return m.client
 }

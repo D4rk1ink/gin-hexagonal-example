@@ -7,7 +7,7 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/database"
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/repository/mapper"
+	repository_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/repository/mapper"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -23,7 +23,7 @@ func NewUserRepository(mongodb database.MongoDb) port.UserRepository {
 }
 
 func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
-	cursor, err := r.mongodb.Db.Collection("users").Find(ctx, nil)
+	cursor, err := r.mongodb.GetDb().Collection("users").Find(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
 func (r *userRepository) GetById(ctx context.Context, id string) (*domain.User, error) {
 	var user domain.User
 
-	err := r.mongodb.Db.Collection("users").FindOne(ctx, map[string]interface{}{"_id": id}).Decode(&user)
+	err := r.mongodb.GetDb().Collection("users").FindOne(ctx, map[string]interface{}{"_id": id}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -59,7 +59,7 @@ func (r *userRepository) GetById(ctx context.Context, id string) (*domain.User, 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
 
-	err := r.mongodb.Db.Collection("users").FindOne(ctx, map[string]interface{}{"email": email}).Decode(&user)
+	err := r.mongodb.GetDb().Collection("users").FindOne(ctx, map[string]interface{}{"email": email}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -71,7 +71,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 }
 
 func (r *userRepository) Create(ctx context.Context, payload *domain.User) (*string, error) {
-	result, err := r.mongodb.Db.Collection("users").InsertOne(ctx, mapper.ToUserModel(payload))
+	result, err := r.mongodb.GetDb().Collection("users").InsertOne(ctx, repository_mapper.ToUserModel(payload))
 
 	if err != nil {
 		return nil, err
