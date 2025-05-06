@@ -2,20 +2,18 @@ package http
 
 import (
 	"fmt"
-	"net/http"
 
 	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_middleware "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/middleware"
-	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/dependency"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/guregu/null"
 )
 
 type HttpHandler interface {
 	http_apigen.ServerInterface
+	SetRouter() error
 	Listen() error
 }
 
@@ -40,7 +38,10 @@ func NewHttpHandler(
 	}
 }
 
-func (h *httpHandler) Listen() error {
+func (h *httpHandler) SetRouter() error {
+	h.router.Use(gin.Recovery())
+	h.router.Use(gin.Logger())
+
 	if config.Config.App.Env != "production" {
 		logger.Info("Running in development mode")
 		h.router.StaticFile("/swagger/doc.yaml", "./docs/server/doc.yaml")
@@ -49,6 +50,12 @@ func (h *httpHandler) Listen() error {
 
 	http_apigen.RegisterHandlers(h.router, h)
 
+	return nil
+}
+
+func (h *httpHandler) Listen() error {
+	h.SetRouter()
+
 	if err := h.router.Run(":8080"); err != nil {
 		panic(err)
 	}
@@ -56,29 +63,4 @@ func (h *httpHandler) Listen() error {
 	logger.Info(fmt.Sprintf("Server started on port %s", config.Config.App.Port))
 
 	return nil
-}
-
-func (h *httpHandler) ResponseError(ctx *gin.Context, err error, httpCode *int) {
-	switch e := err.(type) {
-	case custom_error.CustomError:
-		ctx.JSON(e.GetHttpCode(), http_apigen.ErrorRes{
-			Error: http_apigen.ErrorBody{
-				Code:    e.GetCode(),
-				Message: e.GetMessage(),
-			},
-		})
-		return
-	default:
-		if httpCode == nil {
-			code := http.StatusInternalServerError
-			httpCode = &code
-		}
-		ctx.JSON(*httpCode, http_apigen.ErrorRes{
-			Error: http_apigen.ErrorBody{
-				Code:    custom_error.ErrInternalServerError,
-				Message: null.StringFrom("Internal server error").Ptr(),
-			},
-		})
-		return
-	}
 }
