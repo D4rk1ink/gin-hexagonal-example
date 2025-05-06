@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/database"
 	repository_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/repository/mapper"
@@ -72,7 +71,6 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 
 func (r *userRepository) Create(ctx context.Context, payload *domain.User) (*string, error) {
 	result, err := r.mongodb.GetDb().Collection("users").InsertOne(ctx, repository_mapper.ToUserModel(payload))
-
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +80,12 @@ func (r *userRepository) Create(ctx context.Context, payload *domain.User) (*str
 	return &insertedId, nil
 }
 
-func (r *userRepository) Update(ctx context.Context, payload dto.UserUpdateDto) error {
+func (r *userRepository) Update(ctx context.Context, payload *domain.User) error {
+	_, err := r.mongodb.GetDb().Collection("users").UpdateByID(ctx, payload.ID, repository_mapper.ToUserModel(payload))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	domain "github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
-	dto "github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -111,7 +110,7 @@ func (mr *MockUserRepositoryMockRecorder) GetById(ctx, id interface{}) *gomock.C
 }
 
 // Update mocks base method.
-func (m *MockUserRepository) Update(ctx context.Context, payload dto.UserUpdateDto) error {
+func (m *MockUserRepository) Update(ctx context.Context, payload *domain.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, payload)
 	ret0, _ := ret[0].(error)

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
+	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 )
 
@@ -27,6 +29,39 @@ func (s *userService) GetAll(ctx context.Context) ([]*domain.User, error) {
 
 func (s *userService) GetById(ctx context.Context, id string) (*domain.User, error) {
 	user, err := s.userRepo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *userService) Update(ctx context.Context, userUpdate dto.UserUpdateDto) (*domain.User, error) {
+	if userUpdate.Name == nil && userUpdate.Email == nil {
+		return nil, custom_error.NewError(custom_error.ErrUserInvalidateUpdateInput, nil)
+	}
+
+	user, err := s.userRepo.GetById(ctx, userUpdate.ID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, custom_error.NewError(custom_error.ErrUserNotFound, nil)
+	}
+	if *userUpdate.Name == user.Name && *userUpdate.Email == user.Email {
+		return nil, custom_error.NewError(custom_error.ErrUserUpdateNoDataChanged, nil)
+	}
+
+	if userUpdate.Name != nil {
+		user.SetName(*userUpdate.Name)
+	}
+	if userUpdate.Email != nil {
+		err := user.SetEmail(*userUpdate.Email)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = s.userRepo.Update(ctx, user)
 	if err != nil {
 		return nil, err
 	}

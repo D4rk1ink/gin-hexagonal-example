@@ -1,9 +1,11 @@
-package util
+package time_util
 
 import (
 	"strings"
 	"time"
 )
+
+var Now = time.Now
 
 func ParseDurationToSeconds(input string) (int64, error) {
 	parts := strings.FieldsFunc(input, func(r rune) bool {

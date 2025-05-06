@@ -23,8 +23,11 @@ const (
 )
 
 const (
-	ErrUserDuplicateEmail     = "ERR-USER-001"
-	ErrUserInvalidEmailFormat = "ERR-USER-002"
+	ErrUserDuplicateEmail        = "ERR-USER-001"
+	ErrUserInvalidEmailFormat    = "ERR-USER-002"
+	ErrUserNotFound              = "ERR-USER-003"
+	ErrUserInvalidateUpdateInput = "ERR-USER-004"
+	ErrUserUpdateNoDataChanged   = "ERR-USER-005"
 )
 
 var HttpCodeMap = map[string]int{
@@ -40,6 +43,9 @@ var HttpCodeMap = map[string]int{
 	ErrAuthUnauthenticated:        401,
 	ErrUserDuplicateEmail:         409,
 	ErrUserInvalidEmailFormat:     400,
+	ErrUserNotFound:               404,
+	ErrUserInvalidateUpdateInput:  400,
+	ErrUserUpdateNoDataChanged:    400,
 }
 
 var MessageMap = map[string]string{
@@ -55,6 +61,9 @@ var MessageMap = map[string]string{
 	ErrAuthUnauthenticated:        "Unauthenticated",
 	ErrUserDuplicateEmail:         "Email already exists",
 	ErrUserInvalidEmailFormat:     "Invalid email format",
+	ErrUserNotFound:               "User not found",
+	ErrUserInvalidateUpdateInput:  "Invalid update input",
+	ErrUserUpdateNoDataChanged:    "No data changed",
 }
 
 type CustomErrorInterface interface {

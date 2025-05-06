@@ -5,6 +5,7 @@ import (
 	"time"
 
 	err "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
+	time_util "github.com/D4rk1ink/gin-hexagonal-example/internal/util/time"
 )
 
 type User struct {
@@ -27,8 +28,8 @@ func NewUser(name, email, password string) (*User, error) {
 		Name:      name,
 		Email:     email,
 		Password:  password,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: time_util.Now(),
+		UpdatedAt: time_util.Now(),
 	}, nil
 }
 
@@ -44,8 +45,19 @@ func (u *User) SetId(id string) {
 	u.ID = id
 }
 
-func (u *User) Update(name, email string) {
+func (u *User) SetName(name string) {
 	u.Name = name
+	u.UpdatedAt = time_util.Now()
+}
+
+func (u *User) SetEmail(email string) error {
+	err := validateEmail(email)
+	if err != nil {
+		return err
+	}
+
 	u.Email = email
-	u.UpdatedAt = time.Now()
+	u.UpdatedAt = time_util.Now()
+
+	return nil
 }

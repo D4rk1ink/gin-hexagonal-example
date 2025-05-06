@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/util"
+	time_util "github.com/D4rk1ink/gin-hexagonal-example/internal/util/time"
 	_jwt "github.com/golang-jwt/jwt/v5"
 )
 
@@ -52,7 +52,7 @@ func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, e
 }
 
 func (j *jwt) GenerateTokenWithOptions(input *GenerateTokenInput, options *GenerateTokenOptions) (*string, *int64, error) {
-	duration, err := util.ParseDurationToSeconds(options.Duration)
+	duration, err := time_util.ParseDurationToSeconds(options.Duration)
 	if err != nil {
 		return nil, nil, err
 	}
