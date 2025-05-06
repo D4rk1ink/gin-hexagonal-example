@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
+	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
 	"github.com/gin-gonic/gin"
@@ -19,10 +19,10 @@ func (h *httpHandler) GetUsers(ctx *gin.Context) {
 		return
 	}
 
-	users := lo.Map(result, func(user *domain.User, _ int) apigen.User {
+	users := lo.Map(result, func(user *domain.User, _ int) http_apigen.User {
 		return http_mapper.ToUserResponse(user)
 	})
-	ctx.JSON(http.StatusOK, apigen.UsersRes{
+	ctx.JSON(http.StatusOK, http_apigen.UsersRes{
 		Data: users,
 	})
 }

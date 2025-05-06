@@ -7,12 +7,16 @@ tasks:
     cmds:
       - go mod tidy
       - go mod vendor
+  gen:
+    cmds:
+      - go generate ./...
+      - oapi-codegen -generate types,gin -o internal/application/handler/http/apigen/apigen.go -package http_apigen docs/server/doc.yaml
   dev:
     cmds:
       - docker compose -f container/docker-compose.dev.yaml up --build
   utest:
     cmds:
-      - APP_ENV=test APP_PWD=$(pwd) ginkgo watch --coverprofile=.coverage-report.out ./...
-  gen:
+      - APP_ENV=test APP_PWD=$(pwd) ginkgo watch -r ./...
+  utest-coverage:
     cmds:
-      - oapi-codegen -generate types,gin -o internal/adapter/handler/http/apigen/apigen.go -package apigen docs/server/doc.yaml
+      - APP_ENV=test APP_PWD=$(pwd) ginkgo -r --output-dir=./ --coverprofile=.coverprofile.out ./...

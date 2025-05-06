@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
+	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ import (
 func (h *httpHandler) Register(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
-	var body apigen.RegisterJSONRequestBody
+	var body http_apigen.RegisterJSONRequestBody
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		httpCode := http.StatusBadRequest
 		h.ResponseError(ctx, err, &httpCode)
@@ -27,7 +27,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, apigen.RegisterRes{
+	ctx.JSON(http.StatusOK, http_apigen.RegisterRes{
 		Success: true,
 	})
 }
@@ -35,7 +35,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 func (h *httpHandler) Login(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
-	var body apigen.LoginJSONRequestBody
+	var body http_apigen.LoginJSONRequestBody
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		httpCode := http.StatusBadRequest
 		h.ResponseError(ctx, err, &httpCode)

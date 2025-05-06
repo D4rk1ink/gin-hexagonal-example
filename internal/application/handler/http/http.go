@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
+	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_middleware "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/middleware"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
@@ -15,7 +15,7 @@ import (
 )
 
 type HttpHandler interface {
-	apigen.ServerInterface
+	http_apigen.ServerInterface
 	Listen() error
 }
 
@@ -47,7 +47,7 @@ func (h *httpHandler) Listen() error {
 		h.router.StaticFile("/swagger", "./docs/server/swagger.html")
 	}
 
-	apigen.RegisterHandlers(h.router, h)
+	http_apigen.RegisterHandlers(h.router, h)
 
 	if err := h.router.Run(":8080"); err != nil {
 		panic(err)
@@ -61,8 +61,8 @@ func (h *httpHandler) Listen() error {
 func (h *httpHandler) ResponseError(ctx *gin.Context, err error, httpCode *int) {
 	switch e := err.(type) {
 	case custom_error.CustomError:
-		ctx.JSON(e.GetHttpCode(), apigen.ErrorRes{
-			Error: apigen.ErrorBody{
+		ctx.JSON(e.GetHttpCode(), http_apigen.ErrorRes{
+			Error: http_apigen.ErrorBody{
 				Code:    e.GetCode(),
 				Message: e.GetMessage(),
 			},
@@ -73,8 +73,8 @@ func (h *httpHandler) ResponseError(ctx *gin.Context, err error, httpCode *int) 
 			code := http.StatusInternalServerError
 			httpCode = &code
 		}
-		ctx.JSON(*httpCode, apigen.ErrorRes{
-			Error: apigen.ErrorBody{
+		ctx.JSON(*httpCode, http_apigen.ErrorRes{
+			Error: http_apigen.ErrorBody{
 				Code:    custom_error.ErrInternalServerError,
 				Message: null.StringFrom("Internal server error").Ptr(),
 			},
