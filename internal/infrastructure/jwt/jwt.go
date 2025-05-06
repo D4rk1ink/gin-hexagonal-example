@@ -11,8 +11,9 @@ import (
 
 type Jwt interface {
 	GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, error)
+	GenerateTokenWithOptions(input *GenerateTokenInput, options *GenerateTokenOptions) (*string, *int64, error)
 	ValidateAccessToken(token string) (*TokenPayload, error)
-	ParseAccessToken(token string) (string, error)
+	ValidateTokenWithOptions(token string, options *ValidateTokenOptions) (*TokenPayload, error)
 }
 
 type jwt struct{}
@@ -22,11 +23,20 @@ type GenerateTokenInput struct {
 	Email string `json:"email"`
 }
 
+type GenerateTokenOptions struct {
+	Secret   string
+	Duration string
+}
+
+type ValidateTokenOptions struct {
+	Secret string
+}
+
 type TokenPayload struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 	Exp   int64  `json:"exp"`
-	_jwt.Claims
+	_jwt.RegisteredClaims
 }
 
 func NewJwt() Jwt {
@@ -34,7 +44,14 @@ func NewJwt() Jwt {
 }
 
 func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, error) {
-	duration, err := util.ParseDurationToSeconds(config.Config.Jwt.ExpiresIn)
+	return j.GenerateTokenWithOptions(input, &GenerateTokenOptions{
+		Secret:   config.Config.Jwt.Secret,
+		Duration: config.Config.Jwt.ExpiresIn,
+	})
+}
+
+func (j *jwt) GenerateTokenWithOptions(input *GenerateTokenInput, options *GenerateTokenOptions) (*string, *int64, error) {
+	duration, err := util.ParseDurationToSeconds(options.Duration)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -45,7 +62,7 @@ func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, e
 		Exp:   time.Now().Add(time.Duration(duration) * time.Second).Unix(),
 	}
 	token := _jwt.NewWithClaims(_jwt.SigningMethodHS256, payload)
-	tokenString, err := token.SignedString([]byte(config.Config.Jwt.SecretKey))
+	tokenString, err := token.SignedString([]byte(options.Secret))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,8 +71,14 @@ func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, e
 }
 
 func (j *jwt) ValidateAccessToken(tokenStr string) (*TokenPayload, error) {
+	return j.ValidateTokenWithOptions(tokenStr, &ValidateTokenOptions{
+		Secret: config.Config.Jwt.Secret,
+	})
+}
+
+func (j *jwt) ValidateTokenWithOptions(tokenStr string, options *ValidateTokenOptions) (*TokenPayload, error) {
 	token, err := _jwt.ParseWithClaims(tokenStr, &TokenPayload{}, func(_token *_jwt.Token) (interface{}, error) {
-		return []byte(config.Config.Jwt.SecretKey), nil
+		return []byte(options.Secret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -65,8 +88,4 @@ func (j *jwt) ValidateAccessToken(tokenStr string) (*TokenPayload, error) {
 		return claims, nil
 	}
 	return nil, errors.New("invalid token")
-}
-
-func (j *jwt) ParseAccessToken(token string) (string, error) {
-	return "", nil
 }
