@@ -1,0 +1,16 @@
+app:
+  name: Go Gin Application
+  version: 1.0.0
+  port: 8080
+  env: test
+
+database:
+  host: localhost
+  port: 27017
+  username: root
+  password: password
+  name: gin_hexagonal_example_test
+
+jwt:
+  secret: secret
+  expiresin: 1h

@@ -34,7 +34,7 @@ func NewHttpHandler(
 }
 
 func (h *httpHandler) Listen() error {
-	if config.Config.Env != "production" {
+	if config.Config.App.Env != "production" {
 		fmt.Println("Swagger is enabled")
 		h.router.StaticFile("/swagger/doc.yaml", "./docs/server/doc.yaml")
 		h.router.StaticFile("/swagger", "./docs/server/swagger.html")

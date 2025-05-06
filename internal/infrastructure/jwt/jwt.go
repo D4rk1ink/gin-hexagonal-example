@@ -1,9 +1,8 @@
 package jwt
 
 import (
+	"errors"
 	"time"
-
-	"encoding/json"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/util"
@@ -12,7 +11,7 @@ import (
 
 type Jwt interface {
 	GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, error)
-	ValidateAccessToken(token string) (string, error)
+	ValidateAccessToken(token string) (*TokenPayload, error)
 	ParseAccessToken(token string) (string, error)
 }
 
@@ -27,6 +26,7 @@ type TokenPayload struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 	Exp   int64  `json:"exp"`
+	_jwt.Claims
 }
 
 func NewJwt() Jwt {
@@ -38,27 +38,13 @@ func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, e
 	if err != nil {
 		return nil, nil, err
 	}
+
 	payload := TokenPayload{
 		ID:    input.ID,
 		Email: input.Email,
 		Exp:   time.Now().Add(time.Duration(duration) * time.Second).Unix(),
 	}
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, nil, err
-	}
-	var claims _jwt.MapClaims
-	err = json.Unmarshal(b, &claims)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	println("config.Config.Jwt.SecretKey", config.Config.Jwt.SecretKey)
-
-	token := _jwt.NewWithClaims(_jwt.SigningMethodHS256, _jwt.MapClaims{
-		"exp": "ss",
-		"iat": time.Now().Unix(),
-	})
+	token := _jwt.NewWithClaims(_jwt.SigningMethodHS256, payload)
 	tokenString, err := token.SignedString([]byte(config.Config.Jwt.SecretKey))
 	if err != nil {
 		return nil, nil, err
@@ -67,8 +53,18 @@ func (j *jwt) GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, e
 	return &tokenString, &duration, nil
 }
 
-func (j *jwt) ValidateAccessToken(token string) (string, error) {
-	return "", nil
+func (j *jwt) ValidateAccessToken(tokenStr string) (*TokenPayload, error) {
+	token, err := _jwt.ParseWithClaims(tokenStr, &TokenPayload{}, func(_token *_jwt.Token) (interface{}, error) {
+		return []byte(config.Config.Jwt.SecretKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*TokenPayload); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, errors.New("invalid token")
 }
 
 func (j *jwt) ParseAccessToken(token string) (string, error) {

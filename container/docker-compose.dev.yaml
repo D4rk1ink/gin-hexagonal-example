@@ -9,14 +9,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ENV=dev
-      - DB_HOST=db
-      - DB_PORT=27017
-      - DB_NAME=go_hex
-      - DB_USERNAME=root
-      - DB_PASSWORD=password
-      - JWT_SECRET=secret
-      - JWT_EXPIRESIN=1h
+      - APP_ENV=dev
     depends_on:
       - db
     volumes:
@@ -31,7 +24,7 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=go_hex
+      - MONGO_INITDB_DATABASE=gin_hexagonal_example
     volumes:
       - mongo_data:/data/db
 

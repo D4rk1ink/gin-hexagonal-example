@@ -1,6 +1,15 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+
+	"github.com/spf13/viper"
+)
+
+type app struct {
+	Env string
+}
 
 type database struct {
 	Host     string
@@ -20,7 +29,7 @@ type jwt struct {
 }
 
 type config struct {
-	Env          string
+	App          app
 	Database     database
 	Cryptography cryptography
 	Jwt          jwt
@@ -29,20 +38,33 @@ type config struct {
 var Config *config
 
 func Init() error {
-	// NOTE: May import env from yaml file
-	Config = &config{
-		Env: os.Getenv("ENV"),
-		Database: database{
-			Host:     os.Getenv("DB_HOST"),
-			Port:     os.Getenv("DB_PORT"),
-			Name:     os.Getenv("DB_NAME"),
-			Username: os.Getenv("DB_USERNAME"),
-			Password: os.Getenv("DB_PASSWORD"),
-		},
-		Jwt: jwt{
-			SecretKey: os.Getenv("JWT_SECRET"),
-			ExpiresIn: os.Getenv("JWT_EXPIRESIN"),
-		},
+	configPath := "config"
+	if os.Getenv("APP_PWD") != "" {
+		configPath = os.Getenv("APP_PWD") + "/config"
+	}
+
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "test" {
+		viper.SetConfigName("config.test.yaml")
+	} else if appEnv == "dev" {
+		viper.SetConfigName("config.dev.yaml")
+	} else {
+		viper.SetConfigName("config.yaml")
+	}
+
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(configPath)
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		return err
+	}
+
+	err = viper.Unmarshal(&Config)
+	if err != nil {
+		return err
 	}
 
 	return nil

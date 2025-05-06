@@ -1,2 +1,4 @@
 tmp
 vendor
+.coverage-report.out
+coverprofile.out

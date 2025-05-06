@@ -1,10 +1,13 @@
 package middleware
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
+	"github.com/gin-gonic/gin"
+)
 
 type Middleware struct{}
 
-func NewMiddleware() *Middleware {
+func NewMiddleware(userRepo port.UserRepository) *Middleware {
 	return &Middleware{}
 }
 
