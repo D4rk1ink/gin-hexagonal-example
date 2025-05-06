@@ -7,40 +7,22 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/hash"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/jwt"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type authService struct {
 	userRepo port.UserRepository
 	jwt      jwt.Jwt
+	hash     hash.Hash
 }
 
-func NewAuthService(userRepo port.UserRepository, customJwt jwt.Jwt) port.AuthService {
+func NewAuthService(userRepo port.UserRepository, jwt jwt.Jwt, hash hash.Hash) port.AuthService {
 	return &authService{
 		userRepo: userRepo,
-		jwt:      customJwt,
+		jwt:      jwt,
+		hash:     hash,
 	}
-}
-
-func (s *authService) hashPassword(ctx context.Context, password string) (*string, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-
-	hashedPassword := string(hashed)
-
-	return &hashedPassword, nil
-}
-
-func (s *authService) comparePassword(ctx context.Context, password string, hashedPassword string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	if err != nil {
-		return custom_error.NewError(custom_error.ErrAuthInvalidCredentials, nil)
-	}
-
-	return nil
 }
 
 func (s *authService) Register(ctx context.Context, payload dto.UserRegisterDto) (*string, error) {
@@ -56,7 +38,7 @@ func (s *authService) Register(ctx context.Context, payload dto.UserRegisterDto)
 		return nil, custom_error.NewError(custom_error.ErrAuthEmailAlreadyExists, nil)
 	}
 
-	hashed, err := s.hashPassword(ctx, payload.Password)
+	hashed, err := s.hash.HashPassword(ctx, payload.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +49,6 @@ func (s *authService) Register(ctx context.Context, payload dto.UserRegisterDto)
 
 	id, err := s.userRepo.Create(ctx, user)
 	if err != nil {
-		println(err.Error())
 		return nil, err
 	}
 
@@ -83,9 +64,9 @@ func (s *authService) Login(ctx context.Context, payload dto.CredentialDto) (*dt
 	if user == nil {
 		return nil, custom_error.NewError(custom_error.ErrAuthInvalidCredentials, nil)
 	}
-	err = s.comparePassword(ctx, payload.Password, user.Password)
+	err = s.hash.ComparePassword(ctx, payload.Password, user.Password)
 	if err != nil {
-		return nil, err
+		return nil, custom_error.NewError(custom_error.ErrAuthInvalidCredentials, nil)
 	}
 
 	accessToken, expiresIn, err := s.jwt.GenerateAccessToken(&jwt.GenerateTokenInput{

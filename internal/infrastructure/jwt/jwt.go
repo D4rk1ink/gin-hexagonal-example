@@ -9,6 +9,7 @@ import (
 	_jwt "github.com/golang-jwt/jwt/v5"
 )
 
+//go:generate mockgen -package mock_jwt -source=jwt.go -destination=mock/mock_jwt.go *
 type Jwt interface {
 	GenerateAccessToken(input *GenerateTokenInput) (*string, *int64, error)
 	GenerateTokenWithOptions(input *GenerateTokenInput, options *GenerateTokenOptions) (*string, *int64, error)

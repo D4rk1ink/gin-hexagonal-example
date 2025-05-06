@@ -7,11 +7,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("JWT", Ordered, func() {
+var _ = Describe("JWT", Label("Infrastructure"), func() {
 	var generateTokenOptions *jwt.GenerateTokenOptions
 	var validateTokenOptions *jwt.ValidateTokenOptions
 
-	BeforeAll(func() {
+	BeforeEach(func() {
 		jwtInstance = jwt.NewJwt()
 		generateTokenOptions = &jwt.GenerateTokenOptions{
 			Secret:   config.Config.Jwt.Secret,

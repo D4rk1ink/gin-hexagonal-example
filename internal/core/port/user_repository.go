@@ -7,6 +7,7 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 )
 
+//go:generate mockgen -package mock_port -source=user_repository.go -destination=mock/mock_user_repository.go *
 type UserRepository interface {
 	GetAll(ctx context.Context) ([]*domain.User, error)
 	GetById(ctx context.Context, id string) (*domain.User, error)
