@@ -8,7 +8,6 @@ import (
 )
 
 var _ = Describe("JWT", Ordered, func() {
-	var jwtInstance jwt.Jwt
 	var generateTokenOptions *jwt.GenerateTokenOptions
 	var validateTokenOptions *jwt.ValidateTokenOptions
 
