@@ -12,5 +12,5 @@ database:
   name: gin_hexagonal_example_test
 
 jwt:
-  secret: secret
+  secret: 9CE54VTX0Vffxkh3/HZHYcQBSVYpLT4Y0qkpK1d/m1HHEDrUerkSe8WuMk9F8b2WkRCUB41wIhbkE4pTcAPGXg==
   expiresin: 1h
