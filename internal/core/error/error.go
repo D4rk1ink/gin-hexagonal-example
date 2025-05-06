@@ -19,6 +19,7 @@ const (
 	ErrAuthInvalidEmailFormat     string = "ERR-AUTH-002"
 	ErrAuthEmailAlreadyExists     string = "ERR-AUTH-003"
 	ErrAuthInvalidCredentials     string = "ERR-AUTH-004"
+	ErrAuthUnauthenticated        string = "ERR-AUTH-005"
 )
 
 const (
@@ -36,6 +37,7 @@ var HttpCodeMap = map[string]int{
 	ErrAuthInvalidEmailFormat:     400,
 	ErrAuthEmailAlreadyExists:     409,
 	ErrAuthInvalidCredentials:     401,
+	ErrAuthUnauthenticated:        401,
 	ErrUserDuplicateEmail:         409,
 	ErrUserInvalidEmailFormat:     400,
 }
@@ -50,6 +52,7 @@ var MessageMap = map[string]string{
 	ErrAuthInvalidEmailFormat:     "Invalid email format",
 	ErrAuthEmailAlreadyExists:     "Email already exists",
 	ErrAuthInvalidCredentials:     "Invalid credentials",
+	ErrAuthUnauthenticated:        "Unauthenticated",
 	ErrUserDuplicateEmail:         "Email already exists",
 	ErrUserInvalidEmailFormat:     "Invalid email format",
 }

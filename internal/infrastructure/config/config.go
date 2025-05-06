@@ -8,7 +8,8 @@ import (
 )
 
 type app struct {
-	Env string
+	Env  string
+	Port string
 }
 
 type database struct {
@@ -24,7 +25,7 @@ type cryptography struct {
 }
 
 type jwt struct {
-	SecretKey string
+	Secret    string
 	ExpiresIn string
 }
 

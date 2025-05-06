@@ -8,13 +8,19 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/repository"
 )
 
+type Infrastructure struct {
+	Database database.MongoDb
+	Jwt      jwt.Jwt
+}
+
 type Service struct {
 	AuthService port.AuthService
 	UserService port.UserService
 }
 
 type Dependency struct {
-	Service *Service
+	Service        *Service
+	Infrastructure *Infrastructure
 }
 
 func NewDependency() *Dependency {
@@ -27,17 +33,21 @@ func NewDependency() *Dependency {
 		panic(err)
 	}
 
-	jwtImpl := jwt.NewJwt()
+	jwt := jwt.NewJwt()
 
-	userRepo := repository.NewUserRepository(*db)
+	userRepo := repository.NewUserRepository(db)
 
-	authService := service.NewAuthService(userRepo, jwtImpl)
+	authService := service.NewAuthService(userRepo, jwt)
 	userService := service.NewUserService(userRepo)
 
 	return &Dependency{
 		Service: &Service{
 			AuthService: authService,
 			UserService: userService,
+		},
+		Infrastructure: &Infrastructure{
+			Database: db,
+			Jwt:      jwt,
 		},
 	}
 }

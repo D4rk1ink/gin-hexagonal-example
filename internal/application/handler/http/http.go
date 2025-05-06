@@ -5,9 +5,11 @@ import (
 	"net/http"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
+	http_middleware "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/middleware"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/dependency"
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/guregu/null"
 )
@@ -18,24 +20,29 @@ type HttpHandler interface {
 }
 
 type httpHandler struct {
-	router  *gin.Engine
-	service *dependency.Service
+	router         *gin.Engine
+	service        *dependency.Service
+	infrastructure *dependency.Infrastructure
+	middleware     http_middleware.Middleware
 }
 
 func NewHttpHandler(
-	service *dependency.Service,
+	dep *dependency.Dependency,
 ) HttpHandler {
 	router := gin.Default()
+	middleware := http_middleware.NewMiddleware(dep.Service.UserService, dep.Infrastructure.Jwt)
 
 	return &httpHandler{
-		router:  router,
-		service: service,
+		router:         router,
+		service:        dep.Service,
+		infrastructure: dep.Infrastructure,
+		middleware:     middleware,
 	}
 }
 
 func (h *httpHandler) Listen() error {
 	if config.Config.App.Env != "production" {
-		fmt.Println("Swagger is enabled")
+		logger.Info("Running in development mode")
 		h.router.StaticFile("/swagger/doc.yaml", "./docs/server/doc.yaml")
 		h.router.StaticFile("/swagger", "./docs/server/swagger.html")
 	}
@@ -45,6 +52,8 @@ func (h *httpHandler) Listen() error {
 	if err := h.router.Run(":8080"); err != nil {
 		panic(err)
 	}
+
+	logger.Info(fmt.Sprintf("Server started on port %s", config.Config.App.Port))
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package mapper
+package http_mapper
 
 import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"

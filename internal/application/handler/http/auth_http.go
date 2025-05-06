@@ -1,18 +1,17 @@
 package http
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
+	http_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 )
 
 func (h *httpHandler) Register(ctx *gin.Context) {
-	c := context.Background()
+	c := ctx.Request.Context()
 
 	var body apigen.RegisterJSONRequestBody
 	if err := ctx.ShouldBindJSON(&body); err != nil {
@@ -21,7 +20,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	_, err := h.service.AuthService.Register(c, mapper.ToUserRegisterDto(body))
+	_, err := h.service.AuthService.Register(c, http_mapper.ToUserRegisterDto(body))
 	if err != nil {
 		logger.Error(fmt.Sprintf("Register error: %v", err))
 		h.ResponseError(ctx, err, nil)
@@ -34,7 +33,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 }
 
 func (h *httpHandler) Login(ctx *gin.Context) {
-	c := context.Background()
+	c := ctx.Request.Context()
 
 	var body apigen.LoginJSONRequestBody
 	if err := ctx.ShouldBindJSON(&body); err != nil {
@@ -43,12 +42,12 @@ func (h *httpHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	result, err := h.service.AuthService.Login(c, mapper.ToCredentialDto(body))
+	result, err := h.service.AuthService.Login(c, http_mapper.ToCredentialDto(body))
 	if err != nil {
 		logger.Error(fmt.Sprintf("Login error: %v", err))
 		h.ResponseError(ctx, err, nil)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, mapper.ToAccessTokenResponse(result))
+	ctx.JSON(http.StatusOK, http_mapper.ToAccessTokenResponse(result))
 }

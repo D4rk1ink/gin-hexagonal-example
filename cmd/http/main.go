@@ -19,7 +19,7 @@ func main() {
 
 	dep := dependency.NewDependency()
 
-	err = http.NewHttpHandler(dep.Service).Listen()
+	err = http.NewHttpHandler(dep).Listen()
 	if err != nil {
 		panic(err)
 	}
