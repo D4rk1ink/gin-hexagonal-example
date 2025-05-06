@@ -12,7 +12,6 @@ var _ = Describe("JWT", Label("Infrastructure"), func() {
 	var validateTokenOptions *jwt.ValidateTokenOptions
 
 	BeforeEach(func() {
-		jwtInstance = jwt.NewJwt()
 		generateTokenOptions = &jwt.GenerateTokenOptions{
 			Secret:   config.Config.Jwt.Secret,
 			Duration: config.Config.Jwt.ExpiresIn,

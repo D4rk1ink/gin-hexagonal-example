@@ -7,7 +7,6 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 	mock_port "github.com/D4rk1ink/gin-hexagonal-example/internal/core/port/mock"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/service"
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
 	mock_hash "github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/hash/mock"
 	mock_jwt "github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/jwt/mock"
 	"github.com/golang/mock/gomock"
@@ -33,11 +32,6 @@ func TestJwt(t *testing.T) {
 var _ = BeforeSuite(func() {
 	ctx = context.TODO()
 	ctrl = gomock.NewController(GinkgoT())
-
-	err := config.Init()
-	if err != nil {
-		panic(err)
-	}
 
 	mockUserRepo = mock_port.NewMockUserRepository(ctrl)
 	mockJwt = mock_jwt.NewMockJwt(ctrl)
