@@ -46,6 +46,10 @@ func NewHttpHandler(
 }
 
 func (h *httpHandler) SetRouter() error {
+	if config.Config.App.Env == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	h.router.Use(gin.Recovery())
 	h.router.Use(h.middleware.CorrelationId())
 	h.router.Use(h.middleware.Logger())
