@@ -1,11 +1,14 @@
 package logger
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 )
 
 type logger struct {
-	z *zap.Logger
+	z   *zap.Logger
+	ctx *context.Context
 }
 
 var Logger *logger
@@ -22,6 +25,14 @@ func Init() error {
 	}
 
 	return nil
+}
+
+func WithContextBackground(ctx context.Context) *logger {
+	z, _ := zap.NewProduction()
+	return &logger{
+		z:   z,
+		ctx: &ctx,
+	}
 }
 
 func Info(msg string, fields ...zap.Field) {

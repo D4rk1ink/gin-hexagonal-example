@@ -41,7 +41,8 @@ func NewHttpHandler(
 
 func (h *httpHandler) SetRouter() error {
 	h.router.Use(gin.Recovery())
-	h.router.Use(gin.Logger())
+	h.router.Use(h.middleware.CorrelationId())
+	h.router.Use(h.middleware.Logger())
 
 	wrapper := http_apigen.ServerInterfaceWrapper{
 		Handler: h,
@@ -75,7 +76,7 @@ func (h *httpHandler) GetRouter() *gin.Engine {
 func (h *httpHandler) Listen() error {
 	h.SetRouter()
 
-	if err := h.router.Run(":8080"); err != nil {
+	if err := h.router.Run(":" + config.Config.App.Port); err != nil {
 		panic(err)
 	}
 

@@ -2,17 +2,22 @@ package http_middleware
 
 import (
 	"strings"
+	"time"
 
 	http_util "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/util"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/jwt"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
+	random_util "github.com/D4rk1ink/gin-hexagonal-example/internal/util/random"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Middleware interface {
 	Authentication() gin.HandlerFunc
+	Logger() gin.HandlerFunc
+	CorrelationId() gin.HandlerFunc
 }
 
 type middleware struct {
@@ -66,5 +71,36 @@ func (m *middleware) Authentication() gin.HandlerFunc {
 
 		ctx.Set("user", user)
 		ctx.Next()
+	}
+}
+
+func (m *middleware) Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+
+		c.Next()
+
+		duration := time.Since(start)
+		logger.Info(
+			"",
+			zap.String("correlation_id", c.Writer.Header().Get("X-Correlation-ID")),
+			zap.String("method", c.Request.Method),
+			zap.String("path", path),
+			zap.Int("status", c.Writer.Status()),
+			zap.Duration("duration", duration),
+		)
+	}
+}
+
+func (m *middleware) CorrelationId() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		correlationID := c.Request.Header.Get("X-Correlation-ID")
+		if correlationID == "" {
+			correlationID = random_util.RandomCorrelationId()
+			c.Request.Header.Set("X-Correlation-ID", correlationID)
+		}
+		c.Writer.Header().Set("X-Correlation-ID", correlationID)
+		c.Next()
 	}
 }
