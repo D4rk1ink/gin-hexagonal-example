@@ -96,6 +96,130 @@ var _ = Describe("User Service", Label("Service"), func() {
 		})
 	})
 
+	Context("Create", func() {
+		It("should return user domain", func() {
+			user := users[0]
+			payload := dto.UserCreateDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+			expectedUserDomain, _ := domain.NewUser(user.Name, user.Email, "hashed_password")
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(null.StringFrom("hashed_password").Ptr(), nil)
+			mockUserRepo.
+				EXPECT().
+				Create(ctx, expectedUserDomain).
+				Return(&user.ID, nil)
+			mockUserRepo.
+				EXPECT().
+				GetById(ctx, user.ID).
+				Return(user, nil)
+
+			result, err := userService.Create(ctx, payload)
+
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(user))
+		})
+		It("should return error when email already exists", func() {
+			user := users[0]
+			payload := dto.UserCreateDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(user, nil)
+
+			result, err := userService.Create(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.(custom_error.CustomErrorInterface).GetCode()).To(Equal(custom_error.ErrAuthEmailAlreadyExists))
+		})
+		It("should return error when password and confirm password not match", func() {
+			user := users[0]
+			payload := dto.UserCreateDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        "password",
+				ConfirmPassword: "invalid_password",
+			}
+
+			result, err := userService.Create(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.(custom_error.CustomErrorInterface).GetCode()).To(Equal(custom_error.ErrAuthInvalidConfirmPassword))
+		})
+		It("should return error when hash password failed", func() {
+			user := users[0]
+			payload := dto.UserCreateDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(nil, errors.New("hash error"))
+
+			result, err := userService.Create(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.Error()).To(Equal(errors.New("hash error").Error()))
+		})
+		It("should return error when create user failed", func() {
+			user := users[0]
+			payload := dto.UserCreateDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+			expectedUserDomain, _ := domain.NewUser(user.Name, user.Email, "hashed_password")
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(null.StringFrom("hashed_password").Ptr(), nil)
+			mockUserRepo.
+				EXPECT().
+				Create(ctx, expectedUserDomain).
+				Return(nil, errors.New("create error"))
+
+			result, err := userService.Create(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.Error()).To(Equal(errors.New("create error").Error()))
+		})
+	})
+
 	Context("Update", func() {
 		It("should return updated user", func() {
 			payload := dto.UserUpdateDto{

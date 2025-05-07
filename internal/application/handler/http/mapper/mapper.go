@@ -30,6 +30,15 @@ func ToUserRegisterDto(payload http_apigen.RegisterJSONRequestBody) dto.UserRegi
 	}
 }
 
+func ToUserCreateDto(payload http_apigen.CreateUserJSONRequestBody) dto.UserCreateDto {
+	return dto.UserCreateDto{
+		Name:            payload.Name,
+		Email:           string(payload.Email),
+		Password:        payload.Password,
+		ConfirmPassword: payload.ConfirmPassword,
+	}
+}
+
 func ToUserResponse(user *domain.User) http_apigen.User {
 	return http_apigen.User{
 		Id:        user.ID,

@@ -59,6 +59,19 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// UserCreateReq defines model for UserCreateReq.
+type UserCreateReq struct {
+	ConfirmPassword string              `json:"confirm_password" validate:"required,omitempty"`
+	Email           openapi_types.Email `json:"email" validate:"required,omitempty"`
+	Name            string              `json:"name" validate:"required,omitempty"`
+	Password        string              `json:"password" validate:"required,omitempty"`
+}
+
+// UserCreateRes defines model for UserCreateRes.
+type UserCreateRes struct {
+	Data User `json:"data"`
+}
+
 // UserRes defines model for UserRes.
 type UserRes struct {
 	Data User `json:"data"`
@@ -81,6 +94,12 @@ type GetUsersParams struct {
 	Authorization string `json:"Authorization"`
 }
 
+// CreateUserParams defines parameters for CreateUser.
+type CreateUserParams struct {
+	// Authorization Bearer token for authentication
+	Authorization string `json:"Authorization"`
+}
+
 // GetUserByIdParams defines parameters for GetUserById.
 type GetUserByIdParams struct {
 	// Authorization Bearer token for authentication
@@ -99,6 +118,9 @@ type LoginJSONRequestBody = LoginReq
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
 type RegisterJSONRequestBody = RegisterReq
 
+// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody = UserCreateReq
+
 // UpdateUserByIdJSONRequestBody defines body for UpdateUserById for application/json ContentType.
 type UpdateUserByIdJSONRequestBody = UserUpdateReq
 
@@ -113,6 +135,9 @@ type ServerInterface interface {
 	// Get all users
 	// (GET /api/users)
 	GetUsers(c *gin.Context, params GetUsersParams)
+	// Create a new user
+	// (POST /api/users)
+	CreateUser(c *gin.Context, params CreateUserParams)
 	// Get a user by ID
 	// (GET /api/users/{id})
 	GetUserById(c *gin.Context, id string, params GetUserByIdParams)
@@ -196,6 +221,48 @@ func (siw *ServerInterfaceWrapper) GetUsers(c *gin.Context) {
 	}
 
 	siw.Handler.GetUsers(c, params)
+}
+
+// CreateUser operation middleware
+func (siw *ServerInterfaceWrapper) CreateUser(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateUserParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Authorization" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Authorization")]; found {
+		var Authorization string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Authorization, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Authorization", valueList[0], &Authorization, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Authorization: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.Authorization = Authorization
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Authorization is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateUser(c, params)
 }
 
 // GetUserById operation middleware
@@ -330,6 +397,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/auth/login", wrapper.Login)
 	router.POST(options.BaseURL+"/api/auth/register", wrapper.Register)
 	router.GET(options.BaseURL+"/api/users", wrapper.GetUsers)
+	router.POST(options.BaseURL+"/api/users", wrapper.CreateUser)
 	router.GET(options.BaseURL+"/api/users/:id", wrapper.GetUserById)
 	router.PATCH(options.BaseURL+"/api/users/:id", wrapper.UpdateUserById)
 }

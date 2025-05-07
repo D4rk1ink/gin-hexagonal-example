@@ -11,5 +11,6 @@ import (
 type UserService interface {
 	GetAll(ctx context.Context) ([]*domain.User, error)
 	GetById(ctx context.Context, id string) (*domain.User, error)
+	Create(ctx context.Context, userCreate dto.UserCreateDto) (*domain.User, error)
 	Update(ctx context.Context, userUpdate dto.UserUpdateDto) (*domain.User, error)
 }

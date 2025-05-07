@@ -50,8 +50,8 @@ func NewDependency() *Dependency {
 
 	userRepo := repository.NewUserRepository(db)
 
-	authService := service.NewAuthService(userRepo, jwt, hash)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, hash)
+	authService := service.NewAuthService(userService, userRepo, jwt, hash)
 
 	return &Dependency{
 		Service: &Service{

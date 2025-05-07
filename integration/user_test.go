@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
@@ -148,6 +149,225 @@ var _ = Describe("User Integration", Label("Integration"), func() {
 		})
 		It("should return 401 when not authenticated", func() {
 			req := httptest.NewRequest("GET", server.URL+"/api/users/1", nil)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusUnauthorized))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrUnauthorized))
+		})
+	})
+
+	Context("POST /api/users", func() {
+		It("should return 201 Created if create successfully", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			payload := http_apigen.UserCreateReq{
+				Name:            "mock2",
+				Email:           "mock2@email.com",
+				Password:        "password",
+				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusCreated))
+
+			var body http_apigen.UserCreateRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Data).ToNot(BeNil())
+
+			userModel := findById(body.Data.Id)
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Data).ToNot(BeNil())
+			Expect(body.Data.Id).To(Equal(userModel.ID.Hex()))
+			Expect(body.Data.Name).To(Equal(userModel.Name))
+			Expect(body.Data.Email).To(Equal(userModel.Email))
+			Expect(body.Data.CreatedAt.UnixMilli()).To(Equal(userModel.CreatedAt.UnixMilli()))
+			Expect(body.Data.UpdatedAt.UnixMilli()).To(Equal(userModel.UpdatedAt.UnixMilli()))
+		})
+		It("should return 400 Bad Request if some field is missing", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			payload := http_apigen.UserCreateReq{
+				Email:           "mock@email.com",
+				Password:        "password",
+				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
+		})
+		It("should return 400 Bad Request if required field is empty string", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			payload := http_apigen.UserCreateReq{
+				Name:            "",
+				Email:           "mock@email.com",
+				Password:        "password",
+				ConfirmPassword: "invalid_password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
+		})
+		It("should return 400 Bad Request if password and confirm password not match", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			payload := http_apigen.UserCreateReq{
+				Name:            "mock",
+				Email:           "mock@email.com",
+				Password:        "password",
+				ConfirmPassword: "invalid_password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrAuthInvalidConfirmPassword))
+		})
+		It("should return 400 Bad Request if email is invalid format", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			payload := http_apigen.UserCreateReq{
+				Name:            "mock",
+				Email:           "mockemail.com",
+				Password:        "password",
+				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
+		})
+		It("should return 400 Bad Request if email already created", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+
+			_, _ = db.GetDb().Collection("users").InsertOne(ctx, map[string]interface{}{
+				"name":       "mock2",
+				"email":      "mock2@email.com",
+				"password":   "password",
+				"created_at": time.Now().Format(time.RFC3339),
+				"updated_at": time.Now().Format(time.RFC3339),
+			})
+			payload := http_apigen.UserCreateReq{
+				Name:            "mock2",
+				Email:           "mock2@email.com",
+				Password:        "password",
+				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusConflict))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrAuthEmailAlreadyExists))
+		})
+		It("should return 401 when not authenticated", func() {
+			payload := http_apigen.UserCreateReq{
+				Name:            "mock",
+				Email:           "mockemail.com",
+				Password:        "password",
+				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/users", bytes.NewReader(b))
 			res := httptest.NewRecorder()
 			router.ServeHTTP(res, req)
 

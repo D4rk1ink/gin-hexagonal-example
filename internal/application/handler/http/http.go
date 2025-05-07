@@ -59,6 +59,7 @@ func (h *httpHandler) SetRouter() error {
 
 	users := h.router.Group("/api/users")
 	users.Use(h.middleware.Authentication())
+	users.POST("", wrapper.CreateUser)
 	users.GET("", wrapper.GetUsers)
 	users.GET("/:id", wrapper.GetUserById)
 	users.PATCH("/:id", wrapper.UpdateUserById)

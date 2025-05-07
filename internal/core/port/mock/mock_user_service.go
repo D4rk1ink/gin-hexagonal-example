@@ -36,6 +36,21 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockUserService) Create(ctx context.Context, userCreate dto.UserCreateDto) (*domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, userCreate)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockUserServiceMockRecorder) Create(ctx, userCreate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserService)(nil).Create), ctx, userCreate)
+}
+
 // GetAll mocks base method.
 func (m *MockUserService) GetAll(ctx context.Context) ([]*domain.User, error) {
 	m.ctrl.T.Helper()

@@ -7,15 +7,18 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/hash"
 )
 
 type userService struct {
 	userRepo port.UserRepository
+	hash     hash.Hash
 }
 
-func NewUserService(userRepo port.UserRepository) port.UserService {
+func NewUserService(userRepo port.UserRepository, hash hash.Hash) port.UserService {
 	return &userService{
 		userRepo: userRepo,
+		hash:     hash,
 	}
 }
 
@@ -32,6 +35,41 @@ func (s *userService) GetById(ctx context.Context, id string) (*domain.User, err
 	if err != nil {
 		return nil, err
 	}
+	return user, nil
+}
+
+func (s *userService) Create(ctx context.Context, payload dto.UserCreateDto) (*domain.User, error) {
+	if payload.Password != payload.ConfirmPassword {
+		return nil, custom_error.NewError(custom_error.ErrAuthInvalidConfirmPassword, nil)
+	}
+
+	existsUser, err := s.userRepo.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		return nil, err
+	}
+	if existsUser != nil {
+		return nil, custom_error.NewError(custom_error.ErrAuthEmailAlreadyExists, nil)
+	}
+
+	hashed, err := s.hash.HashPassword(ctx, payload.Password)
+	if err != nil {
+		return nil, err
+	}
+	user, err := domain.NewUser(payload.Name, payload.Email, *hashed)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := s.userRepo.Create(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err = s.userRepo.GetById(ctx, *id)
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 

@@ -11,6 +11,7 @@ import (
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/guregu/null"
 	"github.com/samber/lo"
 )
 
@@ -47,12 +48,34 @@ func (h *httpHandler) GetUserById(ctx *gin.Context, id string, params http_apige
 	})
 }
 
+func (h *httpHandler) CreateUser(ctx *gin.Context, params http_apigen.CreateUserParams) {
+	c := ctx.Request.Context()
+
+	var body http_apigen.CreateUserJSONRequestBody
+	if err := http_util.ValidateJSON(ctx, &body); err != nil {
+		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	result, err := h.service.UserService.Create(c, http_mapper.ToUserCreateDto(body))
+	if err != nil {
+		logger.Error(fmt.Sprintf("Register error: %v", err))
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, http_apigen.UserCreateRes{
+		Data: http_mapper.ToUserResponse(result),
+	})
+}
+
 func (h *httpHandler) UpdateUserById(ctx *gin.Context, id string, params http_apigen.UpdateUserByIdParams) {
 	c := ctx.Request.Context()
 
 	var body http_apigen.UpdateUserByIdJSONRequestBody
 	if err := http_util.ValidateJSON(ctx, &body); err != nil {
-		err = custom_error.NewError(custom_error.ErrBadRequest, nil)
+		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
 		http_util.ResponseError(ctx, err, nil)
 		return
 	}

@@ -19,9 +19,10 @@ var (
 	ctrl        *gomock.Controller
 	authService port.AuthService
 
-	mockUserRepo *mock_port.MockUserRepository
-	mockJwt      *mock_jwt.MockJwt
-	mockHash     *mock_hash.MockHash
+	mockUserService *mock_port.MockUserService
+	mockUserRepo    *mock_port.MockUserRepository
+	mockJwt         *mock_jwt.MockJwt
+	mockHash        *mock_hash.MockHash
 )
 
 func TestJwt(t *testing.T) {
@@ -33,11 +34,12 @@ var _ = BeforeSuite(func() {
 	ctx = context.TODO()
 	ctrl = gomock.NewController(GinkgoT())
 
+	mockUserService = mock_port.NewMockUserService(ctrl)
 	mockUserRepo = mock_port.NewMockUserRepository(ctrl)
 	mockJwt = mock_jwt.NewMockJwt(ctrl)
 	mockHash = mock_hash.NewMockHash(ctrl)
 
-	authService = service.NewAuthService(mockUserRepo, mockJwt, mockHash)
+	authService = service.NewAuthService(mockUserService, mockUserRepo, mockJwt, mockHash)
 })
 
 var _ = AfterSuite(func() {

@@ -7,6 +7,7 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
 	mock_port "github.com/D4rk1ink/gin-hexagonal-example/internal/core/port/mock"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/service/user_service"
+	mock_hash "github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/hash/mock"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -18,6 +19,7 @@ var (
 	userService port.UserService
 
 	mockUserRepo *mock_port.MockUserRepository
+	mockHash     *mock_hash.MockHash
 )
 
 func TestJwt(t *testing.T) {
@@ -30,8 +32,9 @@ var _ = BeforeSuite(func() {
 	ctrl = gomock.NewController(GinkgoT())
 
 	mockUserRepo = mock_port.NewMockUserRepository(ctrl)
+	mockHash = mock_hash.NewMockHash(ctrl)
 
-	userService = user_service.NewUserService(mockUserRepo)
+	userService = user_service.NewUserService(mockUserRepo, mockHash)
 })
 
 var _ = AfterSuite(func() {
