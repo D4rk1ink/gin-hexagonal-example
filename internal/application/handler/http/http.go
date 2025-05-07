@@ -49,7 +49,13 @@ func (h *httpHandler) SetRouter() error {
 		h.router.StaticFile("/swagger", "./docs/server/swagger.html")
 	}
 
-	http_apigen.RegisterHandlers(h.router, h)
+	auth := h.router.Group("/api/auth")
+	auth.POST("/register", h.Register)
+	auth.POST("/login", h.Login)
+
+	users := h.router.Group("/api/users")
+	users.Use(h.middleware.Authentication())
+	users.GET("", h.GetUsers)
 
 	return nil
 }
