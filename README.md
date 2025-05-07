@@ -10,7 +10,7 @@ Before running the project, ensure you have the following installed:
 
 - **Go**: Version 1.24.
 - **Docker** and **Docker Compose**: For containerized development.
-- **Task**: For task automation.
+- **Task**: For task automation. (Like Make command)
 - **oapi-codegen**: For OpenAPI code generation. (For development)
 - **Air**: For hot reloading during development. (For development)
 
@@ -18,12 +18,12 @@ Before running the project, ensure you have the following installed:
 
 ## Getting Started
 
-#### Clone the Repository
+#### Clone Repository
 
 ```bash
 git clone https://github.com/D4rk1ink/gin-hexagonal-example
 ```
-#### Run the Application
+#### Run Application
 
 ```bash
 cd gin-hexagonal-example
@@ -38,6 +38,7 @@ The API is documented using OpenAPI. You can find the specification in the `docs
 #### Example API
 
 ##### Register API
+Request
 ```bash
 curl --location 'http://localhost:8080/api/auth/register' \
 --header 'Content-Type: application/json' \
@@ -48,7 +49,14 @@ curl --location 'http://localhost:8080/api/auth/register' \
     "confirm_password": "password"
 }'
 ```
+Response
+```json
+{
+    "success": true
+}
+```
 ##### Login API
+Request
 ```bash
 curl --location 'http://localhost:8080/api/auth/login' \
 --header 'Content-Type: application/json' \
@@ -57,12 +65,20 @@ curl --location 'http://localhost:8080/api/auth/login' \
     "password": "password"
 }'
 ```
+Response
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MWJiZGMyM2U4ODM2NjIxYzMwM2RjMiIsImVtYWlsIjoidXNlckBlbWFpbC5jb20iLCJleHAiOjE3NDY2NTg4OTJ9.Z0GySUoLvJrvDCbBDTWisTRavVoBoisIryTw3SfWKPY",
+    "expires_in": 3600,
+    "token_type": "Bearer"
+}
+```
 ##### Create User API
-Note: Please adjust Authorization header
+Request
 ```bash
 curl --location 'http://localhost:8080/api/users' \
 --header 'Content-Type: application/json' \
---header 'Authorization: ••••••' \
+--header 'Authorization: <your-access-token>' \
 --data-raw '{
     "name": "FirstName2 LastName2",
     "email": "user2@email.com",
@@ -70,35 +86,120 @@ curl --location 'http://localhost:8080/api/users' \
     "confirm_password": "password"
 }'
 ```
+Response
+```json
+{
+    "data": {
+        "created_at": "2025-05-07T19:06:17.909Z",
+        "email": "user2@email.com",
+        "id": "681baf295bf4df5c5f1b5d9c",
+        "name": "FirstName2 LastName2",
+        "updated_at": "2025-05-07T19:06:17.909Z"
+    }
+}
+```
 ##### Get Users API
-Note: Please adjust Authorization header
+Request
 ```bash
 curl --location 'http://localhost:8080/api/users' \
---header 'Authorization: ••••••'
+--header 'Authorization: <your-access-token>'
+```
+Response
+```json
+{
+    "data": [
+        {
+            "created_at": "2025-05-07T18:47:51.848Z",
+            "email": "user@email.com",
+            "id": "681baad75bf4df5c5f1b5d9b",
+            "name": "FirstName LastName",
+            "updated_at": "2025-05-07T18:47:51.848Z"
+        }
+    ]
+}
 ```
 ##### Get User By Id API
-Note: Please adjust Authorization header and user id
+Request
 ```bash
-curl --location 'http://localhost:8080/api/users/681baad75bf4df5c5f1b5d9b' \
---header 'Authorization: ••••••'
+curl --location 'http://localhost:8080/api/users/<user-id>' \
+--header 'Authorization: <your-access-token>'
+```
+Response
+```json
+{
+    "data": {
+        "created_at": "2025-05-07T18:47:51.848Z",
+        "email": "user@email.com",
+        "id": "681baad75bf4df5c5f1b5d9b",
+        "name": "FirstName LastName",
+        "updated_at": "2025-05-07T18:47:51.848Z"
+    }
+}
 ```
 ##### Update User API
-Note: Please adjust Authorization header and user id
+Request
 ```bash
-curl --location --request PATCH 'http://localhost:8080/api/users/681baf295bf4df5c5f1b5d9c' \
+curl --location --request PATCH 'http://localhost:8080/api/users/<user-id>' \
 --header 'Content-Type: application/json' \
---header 'Authorization: ••••••' \
+--header 'Authorization: <your-access-token>' \
 --data-raw '{
     "name": "NewFirstName LastName",
     "email": "new_user@email.com"
 }'
 ```
-##### Delete User API
-Note: Please adjust Authorization header and user id
-```bash
-curl --location --request DELETE 'http://localhost:8080/api/users/681baf295bf4df5c5f1b5d9c' \
---header 'Authorization: ••••••'
+Response
+```json
+{
+    "data": {
+        "created_at": "2025-05-07T19:06:17.909Z",
+        "email": "new_user@email.com",
+        "id": "681baf295bf4df5c5f1b5d9c",
+        "name": "NewFirstName LastName",
+        "updated_at": "2025-05-07T19:09:57.065167776Z"
+    }
+}
 ```
+##### Delete User API
+Request
+```bash
+curl --location --request DELETE 'http://localhost:8080/api/users/<user-id>' \
+--header 'Authorization: <your-access-token>'
+```
+Response
+```json
+{
+    "success": true
+}
+```
+
+#### JWT Token Usage Guide
+
+The API uses JWT for authentication. Below is a guide on how to use JWT tokens:
+
+1. **Register a User**:
+   Use the `/api/auth/register` endpoint to create a new user.
+
+2. **Login to Get a Token**:
+   Use the `/api/auth/login` endpoint with valid credentials to receive an access token.
+
+   Example Response:
+   ```json
+   {
+     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+     "token_type": "Bearer",
+     "expires_in": 3600
+   }
+   ```
+
+3. **Define Authorization header**:
+   Add the token to the `Authorization` header for protected endpoints.
+
+   Example:
+   ```bash
+   curl --location 'http://localhost:8080/api/users' \
+   --header 'Authorization: Bearer <your-access-token>'
+   ```
+
 ---
 ## API Logging
 Below is an example of a log entry generated for an API request:
@@ -148,7 +249,7 @@ Below is an example of a log entry generated for an API request:
 │   ├── application/        # Application layer containing client interface
 │   │   └── handler/
 │   │       ├── http/       # HTTP-specific handlers for routing and request processing
-│   │       └── scheduler/  # Background job schedulers for periodic tasks
+│   │       └── scheduler/  # Background job schedulers
 │   ├── core/
 │   │   ├── domain/         # Domain models and entities representing the business logic
 │   │   ├── dto/            # Data Transfer Objects for request and response payloads
