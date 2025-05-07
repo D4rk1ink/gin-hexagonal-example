@@ -72,16 +72,14 @@ func (h *httpHandler) SetRouter() error {
 	users.PATCH("/:id", wrapper.UpdateUserById)
 	users.DELETE("/:id", wrapper.DeleteUserById)
 
-	if config.Config.App.Env != "production" {
-		// NOTE: This is for testing purposes only
-		h.router.GET("/waiting", func(ctx *gin.Context) {
-			logger.Info("Waiting for shutdown signal")
-			time.Sleep(10 * time.Second)
-			ctx.JSON(_http.StatusOK, gin.H{
-				"message": "Done",
-			})
+	// NOTE: This is for testing purposes only
+	h.router.GET("/ping", func(ctx *gin.Context) {
+		logger.Info("Waiting for 20 seconds...")
+		time.Sleep(20 * time.Second)
+		ctx.JSON(_http.StatusOK, gin.H{
+			"message": "Done",
 		})
-	}
+	})
 
 	return nil
 }
