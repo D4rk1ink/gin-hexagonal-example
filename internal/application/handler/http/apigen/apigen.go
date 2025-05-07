@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ErrorBody defines model for ErrorBody.
@@ -22,8 +23,8 @@ type ErrorRes struct {
 
 // LoginReq defines model for LoginReq.
 type LoginReq struct {
-	Email    string `json:"email" validate:"required,omitempty"`
-	Password string `json:"password" validate:"required,omitempty"`
+	Email    openapi_types.Email `json:"email" validate:"required,omitempty"`
+	Password string              `json:"password" validate:"required,omitempty"`
 }
 
 // LoginRes defines model for LoginRes.
@@ -35,10 +36,10 @@ type LoginRes struct {
 
 // RegisterReq defines model for RegisterReq.
 type RegisterReq struct {
-	ConfirmPassword string `json:"confirm_password" validate:"required,omitempty"`
-	Email           string `json:"email" validate:"required,omitempty"`
-	Name            string `json:"name" validate:"required,omitempty"`
-	Password        string `json:"password" validate:"required,omitempty"`
+	ConfirmPassword string              `json:"confirm_password" validate:"required,omitempty"`
+	Email           openapi_types.Email `json:"email" validate:"required,omitempty"`
+	Name            string              `json:"name" validate:"required,omitempty"`
+	Password        string              `json:"password" validate:"required,omitempty"`
 }
 
 // RegisterRes defines model for RegisterRes.

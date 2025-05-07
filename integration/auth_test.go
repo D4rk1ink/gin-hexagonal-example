@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Integration", Label("Integration"), func() {
+var _ = Describe("Auth Integration", Label("Integration"), func() {
 	BeforeEach(func() {
 		clearDb()
 	})
@@ -50,6 +50,31 @@ var _ = Describe("Integration", Label("Integration"), func() {
 				Email:           "mock@email.com",
 				Password:        "password",
 				ConfirmPassword: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/auth/register", bytes.NewReader(b))
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
+		})
+		It("should return 400 Bad Request if required field is empty string", func() {
+			payload := http_apigen.RegisterReq{
+				Name:            "",
+				Email:           "mock@email.com",
+				Password:        "password",
+				ConfirmPassword: "invalid_password",
 			}
 			b, _ := json.Marshal(payload)
 			req := httptest.NewRequest("POST", server.URL+"/api/auth/register", bytes.NewReader(b))
@@ -117,7 +142,7 @@ var _ = Describe("Integration", Label("Integration"), func() {
 			Expect(err).To(BeNil())
 
 			Expect(body).ToNot(BeNil())
-			Expect(body.Error.Code).To(Equal(custom_error.ErrAuthInvalidEmailFormat))
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
 		})
 		It("should return 400 Bad Request if email already registered", func() {
 			_, _ = db.GetDb().Collection("users").InsertOne(ctx, map[string]interface{}{
@@ -154,7 +179,7 @@ var _ = Describe("Integration", Label("Integration"), func() {
 	})
 
 	Context("POST /api/auth/login", func() {
-		It("should return 200 OK if login successfully", func() {
+		It("should return 200 OK with access token if login successfully", func() {
 			payloadRegister := http_apigen.RegisterReq{
 				Name:            "mock",
 				Email:           "mock@email.com",
@@ -277,6 +302,52 @@ var _ = Describe("Integration", Label("Integration"), func() {
 
 			Expect(body).ToNot(BeNil())
 			Expect(body.Error.Code).To(Equal(custom_error.ErrAuthInvalidCredentials))
+		})
+		It("should return 400 Bad Request if email is invalid format", func() {
+			payload := http_apigen.LoginReq{
+				Email:    "mockemail.com",
+				Password: "password",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/auth/login", bytes.NewReader(b))
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
+		})
+		It("should return 400 Bad Request if required field is empty string", func() {
+			payload := http_apigen.LoginReq{
+				Email:    "mockemail.com",
+				Password: "",
+			}
+			b, _ := json.Marshal(payload)
+			req := httptest.NewRequest("POST", server.URL+"/api/auth/login", bytes.NewReader(b))
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusBadRequest))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrBadRequest))
 		})
 	})
 })

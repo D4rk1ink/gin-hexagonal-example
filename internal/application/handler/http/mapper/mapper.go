@@ -8,7 +8,7 @@ import (
 
 func ToCredentialDto(payload http_apigen.LoginJSONRequestBody) dto.CredentialDto {
 	return dto.CredentialDto{
-		Email:    payload.Email,
+		Email:    string(payload.Email),
 		Password: payload.Password,
 	}
 }
@@ -24,7 +24,7 @@ func ToAccessTokenResponse(token *dto.AccessTokenDto) http_apigen.LoginRes {
 func ToUserRegisterDto(payload http_apigen.RegisterJSONRequestBody) dto.UserRegisterDto {
 	return dto.UserRegisterDto{
 		Name:            payload.Name,
-		Email:           payload.Email,
+		Email:           string(payload.Email),
 		Password:        payload.Password,
 		ConfirmPassword: payload.ConfirmPassword,
 	}
