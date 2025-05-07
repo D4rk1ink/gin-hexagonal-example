@@ -22,7 +22,6 @@ var _ = Describe("JWT", Label("Infrastructure"), func() {
 	})
 
 	Context("GenerateTokenWithOptions", func() {
-
 		It("should generate and validate JWT tokens", func() {
 			input := &jwt.GenerateTokenInput{
 				ID:    "123",
