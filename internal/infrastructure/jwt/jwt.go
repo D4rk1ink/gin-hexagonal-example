@@ -60,7 +60,7 @@ func (j *jwt) GenerateTokenWithOptions(input *GenerateTokenInput, options *Gener
 	payload := TokenPayload{
 		ID:    input.ID,
 		Email: input.Email,
-		Exp:   time.Now().Add(time.Duration(duration) * time.Second).Unix(),
+		Exp:   time_util.Now().Add(time.Duration(duration) * time.Second).Unix(),
 	}
 	token := _jwt.NewWithClaims(_jwt.SigningMethodHS256, payload)
 	tokenString, err := token.SignedString([]byte(options.Secret))

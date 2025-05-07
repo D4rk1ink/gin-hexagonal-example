@@ -130,6 +130,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
+    patch:
+      summary: Update a user by ID
+      operationId: updateUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateReq'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRes'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
                 
 components:
   schemas:
@@ -222,6 +257,21 @@ components:
       type: object
       required:
         - data
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+    UserUpdateReq:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    UserUpdateRes:
+      type: object
+      required:
+        - success
       properties:
         data:
           $ref: '#/components/schemas/User'

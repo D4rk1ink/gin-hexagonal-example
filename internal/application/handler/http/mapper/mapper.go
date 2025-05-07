@@ -39,3 +39,16 @@ func ToUserResponse(user *domain.User) http_apigen.User {
 		UpdatedAt: user.UpdatedAt,
 	}
 }
+
+func ToUserUpdateDto(id string, payload http_apigen.UpdateUserByIdJSONRequestBody) dto.UserUpdateDto {
+	dto := dto.UserUpdateDto{
+		ID:   id,
+		Name: payload.Name,
+	}
+
+	if payload.Email != nil {
+		dto.Email = (*string)(payload.Email)
+	}
+
+	return dto
+}

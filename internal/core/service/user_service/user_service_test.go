@@ -108,6 +108,10 @@ var _ = Describe("User Service", Label("Service"), func() {
 			updatedUser.SetEmail(*payload.Email)
 			mockUserRepo.
 				EXPECT().
+				GetByEmail(ctx, *payload.Email).
+				Return(nil, nil)
+			mockUserRepo.
+				EXPECT().
 				GetById(ctx, users[0].ID).
 				Return(users[0], nil)
 			mockUserRepo.
@@ -137,7 +141,7 @@ var _ = Describe("User Service", Label("Service"), func() {
 			Expect(result).To(BeNil())
 			Expect(err.(custom_error.CustomError).GetCode()).To(Equal(custom_error.ErrUserInvalidateUpdateInput))
 		})
-		It("should return error if input data is the same with user data", func() {
+		It("should return error if email already exists", func() {
 			payload := dto.UserUpdateDto{
 				ID:    users[0].ID,
 				Name:  null.StringFrom(users[0].Name).Ptr(),
@@ -145,14 +149,14 @@ var _ = Describe("User Service", Label("Service"), func() {
 			}
 			mockUserRepo.
 				EXPECT().
-				GetById(ctx, users[0].ID).
+				GetByEmail(ctx, *payload.Email).
 				Return(users[0], nil)
 
 			result, err := userService.Update(ctx, payload)
 
 			Expect(err).To(HaveOccurred())
 			Expect(result).To(BeNil())
-			Expect(err.(custom_error.CustomError).GetCode()).To(Equal(custom_error.ErrUserUpdateNoDataChanged))
+			Expect(err.(custom_error.CustomError).GetCode()).To(Equal(custom_error.ErrUserEmailAlreadyExists))
 		})
 		It("should return error if user not found", func() {
 			payload := dto.UserUpdateDto{
@@ -160,6 +164,10 @@ var _ = Describe("User Service", Label("Service"), func() {
 				Name:  null.StringFrom(users[0].Name).Ptr(),
 				Email: null.StringFrom(users[0].Email).Ptr(),
 			}
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, *payload.Email).
+				Return(nil, nil)
 			mockUserRepo.
 				EXPECT().
 				GetById(ctx, users[0].ID).
@@ -179,6 +187,10 @@ var _ = Describe("User Service", Label("Service"), func() {
 			}
 			mockUserRepo.
 				EXPECT().
+				GetByEmail(ctx, *payload.Email).
+				Return(nil, nil)
+			mockUserRepo.
+				EXPECT().
 				GetById(ctx, users[0].ID).
 				Return(nil, errors.New("error"))
 
@@ -193,6 +205,10 @@ var _ = Describe("User Service", Label("Service"), func() {
 				Name:  null.StringFrom("new name").Ptr(),
 				Email: null.StringFrom("new@email.com").Ptr(),
 			}
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, *payload.Email).
+				Return(nil, nil)
 			mockUserRepo.
 				EXPECT().
 				GetById(ctx, users[0].ID).

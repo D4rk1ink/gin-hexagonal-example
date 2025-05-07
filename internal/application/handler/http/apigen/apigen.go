@@ -64,6 +64,12 @@ type UserRes struct {
 	Data User `json:"data"`
 }
 
+// UserUpdateReq defines model for UserUpdateReq.
+type UserUpdateReq struct {
+	Email *openapi_types.Email `json:"email,omitempty"`
+	Name  *string              `json:"name,omitempty"`
+}
+
 // UsersRes defines model for UsersRes.
 type UsersRes struct {
 	Data []User `json:"data"`
@@ -81,11 +87,20 @@ type GetUserByIdParams struct {
 	Authorization string `json:"Authorization"`
 }
 
+// UpdateUserByIdParams defines parameters for UpdateUserById.
+type UpdateUserByIdParams struct {
+	// Authorization Bearer token for authentication
+	Authorization string `json:"Authorization"`
+}
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginReq
 
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
 type RegisterJSONRequestBody = RegisterReq
+
+// UpdateUserByIdJSONRequestBody defines body for UpdateUserById for application/json ContentType.
+type UpdateUserByIdJSONRequestBody = UserUpdateReq
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -101,6 +116,9 @@ type ServerInterface interface {
 	// Get a user by ID
 	// (GET /api/users/{id})
 	GetUserById(c *gin.Context, id string, params GetUserByIdParams)
+	// Update a user by ID
+	// (PATCH /api/users/{id})
+	UpdateUserById(c *gin.Context, id string, params UpdateUserByIdParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -231,6 +249,57 @@ func (siw *ServerInterfaceWrapper) GetUserById(c *gin.Context) {
 	siw.Handler.GetUserById(c, id, params)
 }
 
+// UpdateUserById operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUserById(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UpdateUserByIdParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Authorization" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Authorization")]; found {
+		var Authorization string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Authorization, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Authorization", valueList[0], &Authorization, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Authorization: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.Authorization = Authorization
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Authorization is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUserById(c, id, params)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -262,4 +331,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/auth/register", wrapper.Register)
 	router.GET(options.BaseURL+"/api/users", wrapper.GetUsers)
 	router.GET(options.BaseURL+"/api/users/:id", wrapper.GetUserById)
+	router.PATCH(options.BaseURL+"/api/users/:id", wrapper.UpdateUserById)
 }

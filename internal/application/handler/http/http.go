@@ -61,6 +61,7 @@ func (h *httpHandler) SetRouter() error {
 	users.Use(h.middleware.Authentication())
 	users.GET("", wrapper.GetUsers)
 	users.GET("/:id", wrapper.GetUserById)
+	users.PATCH("/:id", wrapper.UpdateUserById)
 
 	return nil
 }

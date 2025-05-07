@@ -2,6 +2,7 @@ package user_repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/port"
@@ -86,8 +87,16 @@ func (r *userRepository) Create(ctx context.Context, payload *domain.User) (*str
 }
 
 func (r *userRepository) Update(ctx context.Context, payload *domain.User) error {
-	_, err := r.mongodb.GetDb().Collection("users").UpdateByID(ctx, payload.ID, repository_mapper.ToUserModel(payload))
+	id, err := bson.ObjectIDFromHex(payload.ID)
 	if err != nil {
+		return err
+	}
+	command := bson.M{
+		"$set": repository_mapper.ToUserModel(payload),
+	}
+	_, err = r.mongodb.GetDb().Collection("users").UpdateByID(ctx, id, command)
+	if err != nil {
+		println(fmt.Sprintf("error update user %v", err))
 		return err
 	}
 

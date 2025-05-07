@@ -8,6 +8,7 @@ import (
 	http_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
 	http_util "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/util"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
+	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -37,6 +38,29 @@ func (h *httpHandler) GetUserById(ctx *gin.Context, id string, params http_apige
 	result, err := h.service.UserService.GetById(c, id)
 	if err != nil {
 		logger.Error(fmt.Sprintf("GetUsers error: %v", err))
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, http_apigen.UserRes{
+		Data: http_mapper.ToUserResponse(result),
+	})
+}
+
+func (h *httpHandler) UpdateUserById(ctx *gin.Context, id string, params http_apigen.UpdateUserByIdParams) {
+	c := ctx.Request.Context()
+
+	var body http_apigen.UpdateUserByIdJSONRequestBody
+	if err := http_util.ValidateJSON(ctx, &body); err != nil {
+		err = custom_error.NewError(custom_error.ErrBadRequest, nil)
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	payload := http_mapper.ToUserUpdateDto(id, body)
+	result, err := h.service.UserService.Update(c, payload)
+	if err != nil {
+		logger.Error(fmt.Sprintf("UpdateUserById error: %v", err))
 		http_util.ResponseError(ctx, err, nil)
 		return
 	}

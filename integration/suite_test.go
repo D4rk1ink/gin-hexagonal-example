@@ -9,6 +9,7 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/config"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/database"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/dependency"
+	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/jwt"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,10 +21,11 @@ func TestJwt(t *testing.T) {
 }
 
 var (
-	ctx    context.Context
-	server *httptest.Server
-	router *gin.Engine
-	db     database.MongoDb
+	ctx      context.Context
+	server   *httptest.Server
+	router   *gin.Engine
+	db       database.MongoDb
+	jwtInfra jwt.Jwt
 )
 
 func clearDb() {
@@ -40,6 +42,7 @@ var _ = BeforeSuite(func() {
 	httpHandler.SetRouter()
 	router = httpHandler.GetRouter()
 	db = dep.Infrastructure.Database
+	jwtInfra = dep.Infrastructure.Jwt
 
 	db.GetDb().Drop(ctx)
 

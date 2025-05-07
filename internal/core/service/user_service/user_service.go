@@ -40,15 +40,22 @@ func (s *userService) Update(ctx context.Context, userUpdate dto.UserUpdateDto) 
 		return nil, custom_error.NewError(custom_error.ErrUserInvalidateUpdateInput, nil)
 	}
 
+	if userUpdate.Email != nil {
+		existingUser, err := s.userRepo.GetByEmail(ctx, *userUpdate.Email)
+		if err != nil {
+			return nil, err
+		}
+		if existingUser != nil && existingUser.Email == *userUpdate.Email {
+			return nil, custom_error.NewError(custom_error.ErrUserEmailAlreadyExists, nil)
+		}
+	}
+
 	user, err := s.userRepo.GetById(ctx, userUpdate.ID)
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
 		return nil, custom_error.NewError(custom_error.ErrUserNotFound, nil)
-	}
-	if *userUpdate.Name == user.Name && *userUpdate.Email == user.Email {
-		return nil, custom_error.NewError(custom_error.ErrUserUpdateNoDataChanged, nil)
 	}
 
 	if userUpdate.Name != nil {
