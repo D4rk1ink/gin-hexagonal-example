@@ -4,9 +4,12 @@
 package http_apigen
 
 import (
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -56,9 +59,26 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// UserRes defines model for UserRes.
+type UserRes struct {
+	Data User `json:"data"`
+}
+
 // UsersRes defines model for UsersRes.
 type UsersRes struct {
 	Data []User `json:"data"`
+}
+
+// GetUsersParams defines parameters for GetUsers.
+type GetUsersParams struct {
+	// Authorization Bearer token for authentication
+	Authorization string `json:"Authorization"`
+}
+
+// GetUserByIdParams defines parameters for GetUserById.
+type GetUserByIdParams struct {
+	// Authorization Bearer token for authentication
+	Authorization string `json:"Authorization"`
 }
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
@@ -77,7 +97,10 @@ type ServerInterface interface {
 	Register(c *gin.Context)
 	// Get all users
 	// (GET /api/users)
-	GetUsers(c *gin.Context)
+	GetUsers(c *gin.Context, params GetUsersParams)
+	// Get a user by ID
+	// (GET /api/users/{id})
+	GetUserById(c *gin.Context, id string, params GetUserByIdParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -118,6 +141,35 @@ func (siw *ServerInterfaceWrapper) Register(c *gin.Context) {
 // GetUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetUsers(c *gin.Context) {
 
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetUsersParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Authorization" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Authorization")]; found {
+		var Authorization string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Authorization, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Authorization", valueList[0], &Authorization, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Authorization: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.Authorization = Authorization
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Authorization is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -125,7 +177,58 @@ func (siw *ServerInterfaceWrapper) GetUsers(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.GetUsers(c)
+	siw.Handler.GetUsers(c, params)
+}
+
+// GetUserById operation middleware
+func (siw *ServerInterfaceWrapper) GetUserById(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetUserByIdParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Authorization" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Authorization")]; found {
+		var Authorization string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Authorization, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Authorization", valueList[0], &Authorization, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Authorization: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.Authorization = Authorization
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Authorization is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetUserById(c, id, params)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -158,4 +261,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/auth/login", wrapper.Login)
 	router.POST(options.BaseURL+"/api/auth/register", wrapper.Register)
 	router.GET(options.BaseURL+"/api/users", wrapper.GetUsers)
+	router.GET(options.BaseURL+"/api/users/:id", wrapper.GetUserById)
 }

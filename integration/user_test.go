@@ -97,4 +97,62 @@ var _ = Describe("User Integration", Label("Integration"), func() {
 			Expect(body.Error.Code).To(Equal(custom_error.ErrUnauthorized))
 		})
 	})
+
+	Context("GET /api/users/{id}", func() {
+		It("should return user by id", func() {
+			registerUser("")
+			accessToken := loginUser("")
+
+			req := httptest.NewRequest("GET", server.URL+"/api/users", nil)
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			var bodyUsers http_apigen.UsersRes
+			resBody, _ := io.ReadAll(res.Body)
+			_ = json.Unmarshal(resBody, &bodyUsers)
+
+			req = httptest.NewRequest("GET", server.URL+"/api/users/"+bodyUsers.Data[0].Id, nil)
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res = httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusOK))
+
+			var body http_apigen.UserRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Data).ToNot(BeNil())
+			Expect(body.Data.Id).ToNot(BeEmpty())
+			Expect(body.Data.Name).To(Equal("mock"))
+			Expect(body.Data.Email).To(Equal("mock@email.com"))
+			Expect(body.Data.CreatedAt.String()).ToNot(BeEmpty())
+			Expect(body.Data.UpdatedAt.String()).ToNot(BeEmpty())
+		})
+		It("should return 401 when not authenticated", func() {
+			req := httptest.NewRequest("GET", server.URL+"/api/users/1", nil)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusUnauthorized))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrUnauthorized))
+		})
+	})
 })

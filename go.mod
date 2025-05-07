@@ -13,13 +13,13 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/samber/lo v1.50.0
 	github.com/spf13/viper v1.20.1
-	go.mongodb.org/mongo-driver v1.17.3
 	go.mongodb.org/mongo-driver/v2 v2.2.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.37.0
 )
 
 require (
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

@@ -17,7 +17,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
 	var body http_apigen.RegisterJSONRequestBody
-	if err := http_util.Validate(ctx, &body); err != nil {
+	if err := http_util.ValidateJSON(ctx, &body); err != nil {
 		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
 		http_util.ResponseError(ctx, err, nil)
 		return
@@ -39,7 +39,7 @@ func (h *httpHandler) Login(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
 	var body http_apigen.LoginJSONRequestBody
-	if err := http_util.Validate(ctx, &body); err != nil {
+	if err := http_util.ValidateJSON(ctx, &body); err != nil {
 		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
 		http_util.ResponseError(ctx, err, nil)
 		return

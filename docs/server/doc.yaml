@@ -99,6 +99,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
+  
+  /api/users/{id}:
+    get:
+      summary: Get a user by ID
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to retrieve
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRes'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
                 
 components:
   schemas:
@@ -187,6 +218,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    UserRes:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
     User:
       type: object
       required:

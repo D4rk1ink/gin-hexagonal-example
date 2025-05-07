@@ -43,6 +43,10 @@ func (h *httpHandler) SetRouter() error {
 	h.router.Use(gin.Recovery())
 	h.router.Use(gin.Logger())
 
+	wrapper := http_apigen.ServerInterfaceWrapper{
+		Handler: h,
+	}
+
 	if config.Config.App.Env != "production" {
 		logger.Info("Running in development mode")
 		h.router.StaticFile("/swagger/doc.yaml", "./docs/server/doc.yaml")
@@ -50,12 +54,13 @@ func (h *httpHandler) SetRouter() error {
 	}
 
 	auth := h.router.Group("/api/auth")
-	auth.POST("/register", h.Register)
-	auth.POST("/login", h.Login)
+	auth.POST("/register", wrapper.Register)
+	auth.POST("/login", wrapper.Login)
 
 	users := h.router.Group("/api/users")
 	users.Use(h.middleware.Authentication())
-	users.GET("", h.GetUsers)
+	users.GET("", wrapper.GetUsers)
+	users.GET("/:id", wrapper.GetUserById)
 
 	return nil
 }

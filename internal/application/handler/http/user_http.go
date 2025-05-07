@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (h *httpHandler) GetUsers(ctx *gin.Context) {
+func (h *httpHandler) GetUsers(ctx *gin.Context, params http_apigen.GetUsersParams) {
 	c := ctx.Request.Context()
 
 	result, err := h.service.UserService.GetAll(c)
@@ -28,5 +28,20 @@ func (h *httpHandler) GetUsers(ctx *gin.Context) {
 	})
 	ctx.JSON(http.StatusOK, http_apigen.UsersRes{
 		Data: users,
+	})
+}
+
+func (h *httpHandler) GetUserById(ctx *gin.Context, id string, params http_apigen.GetUserByIdParams) {
+	c := ctx.Request.Context()
+
+	result, err := h.service.UserService.GetById(c, id)
+	if err != nil {
+		logger.Error(fmt.Sprintf("GetUsers error: %v", err))
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, http_apigen.UserRes{
+		Data: http_mapper.ToUserResponse(result),
 	})
 }
