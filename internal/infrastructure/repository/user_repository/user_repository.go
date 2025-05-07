@@ -44,7 +44,7 @@ func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
 }
 
 func (r *userRepository) GetById(ctx context.Context, id string) (*domain.User, error) {
-	var userModel repository_model.UserModel
+	var userModel *repository_model.UserModel
 
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -58,11 +58,11 @@ func (r *userRepository) GetById(ctx context.Context, id string) (*domain.User, 
 		return nil, err
 	}
 
-	return repository_mapper.ToUserDomain(&userModel), nil
+	return repository_mapper.ToUserDomain(userModel), nil
 }
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	var userModel repository_model.UserModel
+	var userModel *repository_model.UserModel
 
 	err := r.mongodb.GetDb().Collection("users").FindOne(ctx, bson.M{"email": email}).Decode(&userModel)
 	if err != nil {
@@ -72,7 +72,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 		return nil, err
 	}
 
-	return repository_mapper.ToUserDomain(&userModel), nil
+	return repository_mapper.ToUserDomain(userModel), nil
 }
 
 func (r *userRepository) Create(ctx context.Context, payload *domain.User) (*string, error) {
