@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Auth Service", Label("Service"), func() {
+var _ = Describe("User Service", Label("Service"), func() {
 	var users []*domain.User
 	var mockUpdatedTime time.Time
 

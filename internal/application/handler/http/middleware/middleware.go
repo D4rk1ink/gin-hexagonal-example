@@ -34,29 +34,34 @@ func (m *middleware) Authentication() gin.HandlerFunc {
 		token := ctx.Request.Header.Get("Authorization")
 		if token == "" {
 			logger.Error("Authorization header is empty")
-			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrAuthUnauthenticated, nil), nil)
+			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrUnauthorized, nil), nil)
+			return
 		}
 
 		bearer, ok := strings.CutPrefix(token, "Bearer ")
 		if !ok {
 			logger.Error("Authorization header is not Bearer")
-			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrAuthUnauthenticated, nil), nil)
+			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrUnauthorized, nil), nil)
+			return
 		}
 
 		claims, err := m.jwt.ValidateAccessToken(bearer)
 		if err != nil {
 			logger.Error("Invalid access token")
-			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrAuthUnauthenticated, nil), nil)
+			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrUnauthorized, nil), nil)
+			return
 		}
 
 		user, err := m.userService.GetById(c, claims.ID)
 		if err != nil {
 			logger.Error("Failed to get user by id")
 			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrInternalServerError, nil), nil)
+			return
 		}
 		if user == nil {
 			logger.Error("User not found")
-			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrAuthUnauthenticated, nil), nil)
+			http_util.AbortResponseError(ctx, custom_error.NewError(custom_error.ErrUnauthorized, nil), nil)
+			return
 		}
 
 		ctx.Set("user", user)

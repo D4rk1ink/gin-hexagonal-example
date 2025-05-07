@@ -32,11 +32,11 @@ func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
 	var users []*domain.User
 
 	for cursor.Next(ctx) {
-		var user domain.User
+		var user repository_model.UserModel
 		if err := cursor.Decode(&user); err != nil {
 			return nil, err
 		}
-		users = append(users, &user)
+		users = append(users, repository_mapper.ToUserDomain(&user))
 	}
 
 	return users, nil
