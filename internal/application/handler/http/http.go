@@ -1,7 +1,10 @@
 package http
 
 import (
+	"context"
 	"fmt"
+	_http "net/http"
+	"time"
 
 	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_middleware "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/middleware"
@@ -16,9 +19,12 @@ type HttpHandler interface {
 	SetRouter() error
 	GetRouter() *gin.Engine
 	Listen() error
+	ListenAndServe() error
+	Shutdown(context context.Context) error
 }
 
 type httpHandler struct {
+	srv            *_http.Server
 	router         *gin.Engine
 	service        *dependency.Service
 	infrastructure *dependency.Infrastructure
@@ -66,6 +72,17 @@ func (h *httpHandler) SetRouter() error {
 	users.PATCH("/:id", wrapper.UpdateUserById)
 	users.DELETE("/:id", wrapper.DeleteUserById)
 
+	if config.Config.App.Env != "production" {
+		// NOTE: This is for testing purposes only
+		h.router.GET("/waiting", func(ctx *gin.Context) {
+			logger.Info("Waiting for shutdown signal")
+			time.Sleep(10 * time.Second)
+			ctx.JSON(_http.StatusOK, gin.H{
+				"message": "Done",
+			})
+		})
+	}
+
 	return nil
 }
 
@@ -82,5 +99,22 @@ func (h *httpHandler) Listen() error {
 
 	logger.Info(fmt.Sprintf("Server started on port %s", config.Config.App.Port))
 
+	return nil
+}
+
+func (h *httpHandler) ListenAndServe() error {
+	h.SetRouter()
+
+	h.srv = &_http.Server{
+		Addr:    ":" + config.Config.App.Port,
+		Handler: h.router.Handler(),
+	}
+	return h.srv.ListenAndServe()
+}
+
+func (h *httpHandler) Shutdown(context context.Context) error {
+	if err := h.srv.Shutdown(context); err != nil {
+		return fmt.Errorf("server shutdown failed: %v", err)
+	}
 	return nil
 }

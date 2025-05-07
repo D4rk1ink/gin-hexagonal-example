@@ -11,7 +11,7 @@ import (
 
 type MongoDb interface {
 	Connect() error
-	Disconnect(ctx context.Context)
+	Disconnect(ctx context.Context) error
 	GetDb() *mongo.Database
 	GetClient() *mongo.Client
 }
@@ -50,8 +50,8 @@ func (m *mongoDb) Connect() error {
 	return nil
 }
 
-func (m *mongoDb) Disconnect(ctx context.Context) {
-	m.client.Disconnect(ctx)
+func (m *mongoDb) Disconnect(ctx context.Context) error {
+	return m.client.Disconnect(ctx)
 }
 
 func (m *mongoDb) GetDb() *mongo.Database {
