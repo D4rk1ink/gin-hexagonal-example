@@ -3,6 +3,7 @@ app:
   version: 1.0.0
   port: 8080
   env: production
+  swagger: true
 
 database:
   host: host.docker.internal

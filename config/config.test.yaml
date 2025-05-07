@@ -3,6 +3,7 @@ app:
   version: 1.0.0
   port: 8080
   env: test
+  swagger: true
 
 database:
   host: localhost

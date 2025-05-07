@@ -54,8 +54,8 @@ func (h *httpHandler) SetRouter() error {
 		Handler: h,
 	}
 
-	if config.Config.App.Env != "production" {
-		logger.Info("Running in development mode")
+	if config.Config.App.Swagger {
+		logger.Info("Swagger is enabled")
 		h.router.StaticFile("/swagger/doc.yaml", "./docs/server/doc.yaml")
 		h.router.StaticFile("/swagger", "./docs/server/swagger.html")
 	}

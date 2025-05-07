@@ -8,8 +8,9 @@ import (
 )
 
 type app struct {
-	Env  string
-	Port string
+	Env     string
+	Port    string
+	Swagger bool
 }
 
 type database struct {
