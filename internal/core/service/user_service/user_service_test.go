@@ -348,4 +348,55 @@ var _ = Describe("User Service", Label("Service"), func() {
 			Expect(result).To(BeNil())
 		})
 	})
+
+	Context("Delete", func() {
+		It("should return nil if user deleted successfully", func() {
+			mockUserRepo.
+				EXPECT().
+				GetById(ctx, users[0].ID).
+				Return(users[0], nil)
+			mockUserRepo.
+				EXPECT().
+				Delete(ctx, users[0].ID).
+				Return(nil)
+
+			err := userService.Delete(ctx, users[0].ID)
+
+			Expect(err).To(BeNil())
+		})
+		It("should return error if user not found", func() {
+			mockUserRepo.
+				EXPECT().
+				GetById(ctx, users[0].ID).
+				Return(nil, nil)
+
+			err := userService.Delete(ctx, users[0].ID)
+
+			Expect(err).To(HaveOccurred())
+		})
+		It("should return error if cannot get user by id", func() {
+			mockUserRepo.
+				EXPECT().
+				GetById(ctx, users[0].ID).
+				Return(nil, errors.New("error"))
+
+			err := userService.Delete(ctx, users[0].ID)
+
+			Expect(err).To(HaveOccurred())
+		})
+		It("should return error if user repo Delete return error", func() {
+			mockUserRepo.
+				EXPECT().
+				GetById(ctx, users[0].ID).
+				Return(users[0], nil)
+			mockUserRepo.
+				EXPECT().
+				Delete(ctx, users[0].ID).
+				Return(errors.New("error"))
+
+			err := userService.Delete(ctx, users[0].ID)
+
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

@@ -104,5 +104,14 @@ func (r *userRepository) Update(ctx context.Context, payload *domain.User) error
 }
 
 func (r *userRepository) Delete(ctx context.Context, id string) error {
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.mongodb.GetDb().Collection("users").DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

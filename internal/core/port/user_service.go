@@ -13,4 +13,5 @@ type UserService interface {
 	GetById(ctx context.Context, id string) (*domain.User, error)
 	Create(ctx context.Context, userCreate dto.UserCreateDto) (*domain.User, error)
 	Update(ctx context.Context, userUpdate dto.UserUpdateDto) (*domain.User, error)
+	Delete(ctx context.Context, id string) error
 }

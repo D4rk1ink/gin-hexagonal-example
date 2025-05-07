@@ -112,3 +112,19 @@ func (s *userService) Update(ctx context.Context, userUpdate dto.UserUpdateDto) 
 	}
 	return user, nil
 }
+
+func (s *userService) Delete(ctx context.Context, id string) error {
+	user, err := s.userRepo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return custom_error.NewError(custom_error.ErrUserNotFound, nil)
+	}
+
+	err = s.userRepo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
