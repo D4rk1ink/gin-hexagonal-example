@@ -22,6 +22,15 @@ func NewUserService(userRepo port.UserRepository, hash hash.Hash) port.UserServi
 	}
 }
 
+func (s *userService) Count(ctx context.Context) (int64, error) {
+	count, err := s.userRepo.Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (s *userService) GetAll(ctx context.Context) ([]*domain.User, error) {
 	users, err := s.userRepo.GetAll(ctx)
 	if err != nil {

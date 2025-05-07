@@ -43,6 +43,29 @@ var _ = Describe("User Service", Label("Service"), func() {
 		}
 	})
 
+	Context("Count", func() {
+		It("should return user count", func() {
+			mockUserRepo.
+				EXPECT().
+				Count(ctx).
+				Return(int64(len(users)), nil)
+			result, err := userService.Count(ctx)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(int64(len(users))))
+		})
+		It("should return error when user repo Count return error", func() {
+			mockUserRepo.
+				EXPECT().
+				Count(ctx).
+				Return(int64(0), errors.New("error"))
+			result, err := userService.Count(ctx)
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeZero())
+			Expect(err.Error()).To(Equal(errors.New("error").Error()))
+		})
+	})
+
 	Context("GetAll", func() {
 		It("should return all users", func() {
 			mockUserRepo.

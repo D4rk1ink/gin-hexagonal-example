@@ -23,6 +23,15 @@ func NewUserRepository(mongodb database.MongoDb) port.UserRepository {
 	}
 }
 
+func (r *userRepository) Count(ctx context.Context) (int64, error) {
+	count, err := r.mongodb.GetDb().Collection("users").CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
 	cursor, err := r.mongodb.GetDb().Collection("users").Find(ctx, bson.M{})
 	if err != nil {

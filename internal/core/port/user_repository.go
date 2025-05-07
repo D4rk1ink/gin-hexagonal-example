@@ -8,6 +8,7 @@ import (
 
 //go:generate mockgen -package mock_port -source=user_repository.go -destination=mock/mock_user_repository.go *
 type UserRepository interface {
+	Count(ctx context.Context) (int64, error)
 	GetAll(ctx context.Context) ([]*domain.User, error)
 	GetById(ctx context.Context, id string) (*domain.User, error)
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
