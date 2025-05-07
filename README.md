@@ -19,11 +19,11 @@ This is a RESTful API built using the [Gin](https://github.com/gin-gonic/gin) we
 
 Before running the project, ensure you have the following installed:
 
-- **Go**: Version 1.20 or later.
+- **Go**: Version 1.24.
 - **Docker** and **Docker Compose**: For containerized development.
-- **oapi-codegen**: For OpenAPI code generation.
-- **Air**: For hot reloading during development (optional).
 - **Task**: For task automation.
+- **oapi-codegen**: For OpenAPI code generation. (For development)
+- **Air**: For hot reloading during development. (For development)
 
 ---
 
@@ -33,9 +33,127 @@ Before running the project, ensure you have the following installed:
 
 ```bash
 git clone https://github.com/D4rk1ink/gin-hexagonal-example
-cd gin-hexagonal-example
 ```
+### Run the Application
 
+```bash
+cd gin-hexagonal-example
+task prod
+```
+---
+
+## API Documentation
+
+The API is documented using OpenAPI. You can find the specification in the `docs/server/doc.yaml` file or enter to [http://localhost:8080/swagger](http://localhost:8080/swagger) or [Postman Collection](https://github.com/D4rk1ink/gin-hexagonal-example/postman_collection.json). To view the documentation:
+
+#### Example API
+
+##### Register API
+```bash
+curl --location 'http://localhost:8080/api/auth/register' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "FirstName LastName",
+    "email": "user@email.com",
+    "password": "password",
+    "confirm_password": "password"
+}'
+```
+##### Login API
+```bash
+curl --location 'http://localhost:8080/api/auth/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "email": "user@email.com",
+    "password": "password"
+}'
+```
+##### Create User API
+Note: Please adjust Authorization header
+```bash
+curl --location 'http://localhost:8080/api/users' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: ••••••' \
+--data-raw '{
+    "name": "FirstName2 LastName2",
+    "email": "user2@email.com",
+    "password": "password",
+    "confirm_password": "password"
+}'
+```
+##### Get Users API
+Note: Please adjust Authorization header
+```bash
+curl --location 'http://localhost:8080/api/users' \
+--header 'Authorization: ••••••'
+```
+##### Get User By Id API
+Note: Please adjust Authorization header and user id
+```bash
+curl --location 'http://localhost:8080/api/users/681baad75bf4df5c5f1b5d9b' \
+--header 'Authorization: ••••••'
+```
+##### Update User API
+Note: Please adjust Authorization header and user id
+```bash
+curl --location --request PATCH 'http://localhost:8080/api/users/681baf295bf4df5c5f1b5d9c' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: ••••••' \
+--data-raw '{
+    "name": "NewFirstName LastName",
+    "email": "new_user@email.com"
+}'
+```
+##### Delete User API
+Note: Please adjust Authorization header and user id
+```bash
+curl --location --request DELETE 'http://localhost:8080/api/users/681baf295bf4df5c5f1b5d9c' \
+--header 'Authorization: ••••••'
+```
+---
+
+## Project Structure
+
+```plaintext
+├── cmd/
+│   └── app/
+│       └── main.go         # Main application bootstrap where the server is initialized and started
+├── config/                 # Configuration folder containing environment variables and settings
+├── container/
+│   ├── Dockerfile          # Dockerfile for building the image
+│   └── docker-compose.yml
+├── docs/
+│   └── server/
+│       └── doc.yaml        # OpenAPI specification for the API endpoints
+├── integration/            # Integration tests to validate the interaction between components
+├── internal/
+│   ├── application/        # Application layer containing client interface
+│   │   └── handler/
+│   │       ├── http/       # HTTP-specific handlers for routing and request processing
+│   │       └── scheduler/  # Background job schedulers for periodic tasks
+│   ├── core/
+│   │   ├── domain/         # Domain models and entities representing the business logic
+│   │   ├── dto/            # Data Transfer Objects for request and response payloads
+│   │   ├── error/          # Custom error definitions
+│   │   ├── port/           # Interfaces for dependency inversion (e.g., repositories, services)
+│   │   └── service/        # Business logic implementations for the core domain
+│   ├── infrastructure/     # Infrastructure-specific implementations and utilities
+│   │   ├── config/         # Configuration management and environment setup
+│   │   ├── database/
+│   │   ├── dependency/     # Dependency injection setup for the application
+│   │   ├── hash/
+│   │   ├── jwt/
+│   │   ├── logger/
+│   │   └── repository/     # Datasource repositories for external data
+│   └── util/               # Utility functions and helpers used across the application
+├── go.mod
+├── go.sum
+├── README.md               # Project documentation
+└── Taskfile.yml            # Task runner configuration for automating common tasks
+```
+---
+
+## Development
 ### Install Dependencies
 
 ```bash
@@ -48,63 +166,34 @@ go mod tidy
 task dev
 ```
 
-
----
-
-## Project Structure
-
-```plaintext
-├── cmd/                # Application entry points
-│   └── main.go         # Main application bootstrap
-├── internal/           # Core application logic
-│   ├── adapter/        # Adapters for external systems (e.g., HTTP, DB)
-│   │   ├── handler/    # HTTP handlers
-│   │   └── repository/ # Database repositories
-│   ├── application/    # Application services (business logic)
-│   ├── domain/         # Core domain models and interfaces
-│   └── config/         # Configuration management
-├── docs/               # OpenAPI specification
-│   └── server/         
-│       └── doc.yaml    # API documentation files
-├── container/          # Docker Compose files
-│   ├── Dockerfile.dev  # Dockerfile for development
-│   └── docker-compose.dev.yaml
-├── .air.toml           # Air configuration for hot reloading
-├── Taskfile.yml        # Task runner configuration
-├── go.mod              # Go module dependencies
-├── go.sum              # Go module checksums
-└── README.md           # Project documentation
-```
-
----
-
-## API Documentation
-
-The API is documented using OpenAPI. You can find the specification in the `docs/server/doc.yaml` file or enter to [http://localhost:8080/swagger](http://localhost:8080/swagger). To view the documentation:
-
-
-
----
-
-## Development
-
-### Running Tests
+### Running Unit Tests
 
 Run the following command to execute the test suite:
 
 ```bash
-task test
+task utest
 ```
+Watch mode
+```bash
+task utest-watch
+```
+With coverage
+```bash
+task utest-coverage
+```
+### Running Integration Tests
 
-### Linting
-
-Ensure your code adheres to Go standards by running:
+Run the following command to execute the integration test:
 
 ```bash
-task lint
+task dev
+task itest
 ```
-
----
+Watch mode
+```bash
+task dev
+task itest-watch
+```
 
 ## Acknowledgments
 
