@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http"
+	http_handler "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/dependency"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 )
@@ -14,7 +14,7 @@ import (
 func main() {
 	dep := dependency.NewDependency()
 
-	handler := http.NewHttpHandler(dep)
+	handler := http_handler.NewHttpHandler(dep)
 
 	go func() {
 		if err := handler.ListenAndServe(); err != nil && err != _http.ErrServerClosed {
