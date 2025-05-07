@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	_http "net/http"
 	"os/signal"
 	"syscall"
 
 	http_handler "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http"
+	scheduler_handler "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/scheduler"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/dependency"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 )
@@ -14,24 +16,32 @@ import (
 func main() {
 	dep := dependency.NewDependency()
 
-	handler := http_handler.NewHttpHandler(dep)
+	httpHandler := http_handler.NewHttpHandler(dep)
+	scheduleHandler := scheduler_handler.NewScheduler(dep)
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	err := scheduleHandler.Start(ctx)
+	if err != nil {
+		panic(err)
+	}
 	go func() {
-		if err := handler.ListenAndServe(); err != nil && err != _http.ErrServerClosed {
+		if err := httpHandler.ListenAndServe(); err != nil && err != _http.ErrServerClosed {
 			panic(err)
 		}
 	}()
 
-	shutdown, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-	<-shutdown.Done()
-
+	<-ctx.Done()
 	logger.Info("Received shutdown signal, shutting down server...")
-	if err := handler.Shutdown(context.Background()); err != nil {
-		panic(err)
+	if err := scheduleHandler.Shutdown(ctx); err != nil {
+		logger.Error(fmt.Sprintf("Scheduler shutdown error: %v", err))
 	}
-	if err := dep.Infrastructure.Database.Disconnect(context.Background()); err != nil {
-		panic(err)
+	if err := httpHandler.Shutdown(ctx); err != nil {
+		logger.Error(fmt.Sprintf("HTTP server shutdown error: %v", err))
+	}
+	if err := dep.Infrastructure.Database.Disconnect(ctx); err != nil {
+		logger.Error(fmt.Sprintf("Database shutdown error: %v", err))
 	}
 	logger.Info("Server shutdown gracefully")
 }
