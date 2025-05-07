@@ -53,15 +53,22 @@ var _ = Describe("User Integration", Label("Integration"), func() {
 		return body.AccessToken
 	}
 
-	findById := func(id string) repository_model.UserModel {
-		var userModel repository_model.UserModel
+	findById := func(id string) *repository_model.UserModel {
+		var userModel *repository_model.UserModel
 		objId, _ := bson.ObjectIDFromHex(id)
 		db.GetDb().Collection("users").FindOne(ctx, bson.M{"_id": objId}).Decode(&userModel)
 
 		return userModel
 	}
 
-	findUserByAccessToken := func(accessToken string) repository_model.UserModel {
+	findByEmail := func(email string) *repository_model.UserModel {
+		var userModel *repository_model.UserModel
+		db.GetDb().Collection("users").FindOne(ctx, bson.M{"email": email}).Decode(&userModel)
+
+		return userModel
+	}
+
+	findUserByAccessToken := func(accessToken string) *repository_model.UserModel {
 		token, _ := jwtInfra.ValidateAccessToken(accessToken)
 
 		return findById(token.ID)
@@ -520,6 +527,79 @@ var _ = Describe("User Integration", Label("Integration"), func() {
 		})
 		It("should return 401 when not authenticated", func() {
 			req := httptest.NewRequest("GET", server.URL+"/api/users/1", nil)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusUnauthorized))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrUnauthorized))
+		})
+	})
+
+	Context("DELETE /api/users/{id}", func() {
+		It("should return 200 OK if delete user successfully", func() {
+			registerUser("mock")
+			registerUser("mock2")
+			accessToken := loginUser("mock")
+			userModel := findByEmail("mock2@email.com")
+
+			req := httptest.NewRequest("DELETE", server.URL+"/api/users/"+userModel.ID.Hex(), nil)
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusOK))
+
+			var body http_apigen.UserDeleteRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Success).To(BeTrue())
+
+			userModel = findById(userModel.ID.Hex())
+			Expect(userModel).To(BeNil())
+		})
+		It("should return 404 Not Found if user not found", func() {
+			registerUser("mock")
+			accessToken := loginUser("mock")
+			invalidId := bson.NewObjectID().Hex()
+
+			req := httptest.NewRequest("DELETE", server.URL+"/api/users/"+invalidId, nil)
+			req.Header.Set("Authorization", "Bearer "+accessToken)
+			res := httptest.NewRecorder()
+			router.ServeHTTP(res, req)
+
+			Expect(res).ToNot(BeNil())
+			Expect(res.Code).To(Equal(http.StatusNotFound))
+
+			var body http_apigen.ErrorRes
+			resBody, err := io.ReadAll(res.Body)
+			Expect(err).To(BeNil())
+
+			err = json.Unmarshal(resBody, &body)
+			Expect(err).To(BeNil())
+
+			Expect(body).ToNot(BeNil())
+			Expect(body.Error).ToNot(BeNil())
+			Expect(body.Error.Code).To(Equal(custom_error.ErrUserNotFound))
+		})
+		It("should return 401 when not authenticated", func() {
+			req := httptest.NewRequest("DELETE", server.URL+"/api/users/1", nil)
 			res := httptest.NewRecorder()
 			router.ServeHTTP(res, req)
 

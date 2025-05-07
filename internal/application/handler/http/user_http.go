@@ -92,3 +92,18 @@ func (h *httpHandler) UpdateUserById(ctx *gin.Context, id string, params http_ap
 		Data: http_mapper.ToUserResponse(result),
 	})
 }
+
+func (h *httpHandler) DeleteUserById(ctx *gin.Context, id string, params http_apigen.DeleteUserByIdParams) {
+	c := ctx.Request.Context()
+
+	err := h.service.UserService.Delete(c, id)
+	if err != nil {
+		logger.Error(fmt.Sprintf("DeleteUserById error: %v", err))
+		http_util.ResponseError(ctx, err, nil)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, http_apigen.RegisterRes{
+		Success: true,
+	})
+}
