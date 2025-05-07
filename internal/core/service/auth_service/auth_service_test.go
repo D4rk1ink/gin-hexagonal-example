@@ -8,6 +8,7 @@ import (
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/jwt"
+	time_util "github.com/D4rk1ink/gin-hexagonal-example/internal/util/time"
 	"github.com/guregu/null"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -18,6 +19,9 @@ var _ = Describe("Auth Service", Label("Service"), func() {
 
 	BeforeEach(func() {
 		mockTime, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+		time_util.Now = func() time.Time {
+			return mockTime
+		}
 		user = &domain.User{
 			ID:        "1",
 			Name:      "John Doe",
@@ -26,6 +30,121 @@ var _ = Describe("Auth Service", Label("Service"), func() {
 			CreatedAt: mockTime,
 			UpdatedAt: mockTime,
 		}
+	})
+
+	Context("Register", func() {
+		It("should return user id", func() {
+			payload := dto.UserRegisterDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+			expectedUserDomain, _ := domain.NewUser(user.Name, user.Email, "hashed_password")
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(null.StringFrom("hashed_password").Ptr(), nil)
+			mockUserRepo.
+				EXPECT().
+				Create(ctx, expectedUserDomain).
+				Return(&user.ID, nil)
+
+			result, err := authService.Register(ctx, payload)
+
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(*result).To(Equal(user.ID))
+		})
+		It("should return error when email already exists", func() {
+			payload := dto.UserRegisterDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(user, nil)
+
+			result, err := authService.Register(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.(custom_error.CustomErrorInterface).GetCode()).To(Equal(custom_error.ErrAuthEmailAlreadyExists))
+		})
+		It("should return error when password and confirm password not match", func() {
+			payload := dto.UserRegisterDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        "password",
+				ConfirmPassword: "invalid_password",
+			}
+
+			result, err := authService.Register(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.(custom_error.CustomErrorInterface).GetCode()).To(Equal(custom_error.ErrAuthInvalidConfirmPassword))
+		})
+		It("should return error when hash password failed", func() {
+			payload := dto.UserRegisterDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(nil, errors.New("hash error"))
+
+			result, err := authService.Register(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.Error()).To(Equal(errors.New("hash error").Error()))
+		})
+		It("should return error when create user failed", func() {
+			payload := dto.UserRegisterDto{
+				Name:            user.Name,
+				Email:           user.Email,
+				Password:        user.Password,
+				ConfirmPassword: user.Password,
+			}
+			expectedUserDomain, _ := domain.NewUser(user.Name, user.Email, "hashed_password")
+
+			mockUserRepo.
+				EXPECT().
+				GetByEmail(ctx, payload.Email).
+				Return(nil, nil)
+			mockHash.
+				EXPECT().
+				HashPassword(ctx, payload.Password).
+				Return(null.StringFrom("hashed_password").Ptr(), nil)
+			mockUserRepo.
+				EXPECT().
+				Create(ctx, expectedUserDomain).
+				Return(nil, errors.New("create error"))
+
+			result, err := authService.Register(ctx, payload)
+
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+			Expect(err.Error()).To(Equal(errors.New("create error").Error()))
+		})
 	})
 
 	Context("Login", func() {
