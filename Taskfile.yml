@@ -29,3 +29,6 @@ tasks:
   itest-watch:
       cmds:
         - APP_ENV=test APP_PWD=$(pwd) ginkgo watch -r -v ./integration/...
+  prod:
+    cmds:
+      - docker compose -f container/docker-compose.yaml up --build

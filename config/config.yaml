@@ -2,10 +2,10 @@ app:
   name: Go Gin Application
   version: 1.0.0
   port: 8080
-  env: dev
+  env: production
 
 database:
-  host: localhost
+  host: host.docker.internal
   port: 27017
   username: root
   password: password

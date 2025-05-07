@@ -1,5 +1,5 @@
 app:
-  name: Go Gin Application
+  name: gin-hexagonal-example
   version: 1.0.0
   port: 8080
   env: dev
@@ -9,7 +9,7 @@ database:
   port: 27017
   username: root
   password: password
-  name: gin_hexagonal_example
+  name: gin_hexagonal_example_dev
 
 jwt:
   secret: cQ2ulqngX9JS96MI31leH/GnNudPVr8LOLU1KL+caHow+4XLRY4LQttwEv+yNo0GsMr+4AjtMhjg633rHwdOMg==
