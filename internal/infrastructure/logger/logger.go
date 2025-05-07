@@ -4,52 +4,61 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type logger struct {
-	z   *zap.Logger
+	l   *zap.Logger
 	ctx *context.Context
 }
 
 var Logger *logger
 
 func Init() error {
-	z, err := zap.NewProduction()
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	l, err := config.Build()
 	if err != nil {
 		return err
 	}
-	defer z.Sync()
+	defer l.Sync()
 
 	Logger = &logger{
-		z: z,
+		l: l,
 	}
 
 	return nil
 }
 
+// TODO
 func WithContextBackground(ctx context.Context) *logger {
-	z, _ := zap.NewProduction()
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	l, _ := config.Build()
+
+	defer l.Sync()
+
 	return &logger{
-		z:   z,
+		l:   l,
 		ctx: &ctx,
 	}
 }
 
 func Info(msg string, fields ...zap.Field) {
-	Logger.z.Info(msg, fields...)
+	Logger.l.Info(msg, fields...)
 }
 func Error(msg string, fields ...zap.Field) {
-	Logger.z.Error(msg, fields...)
+	Logger.l.Error(msg, fields...)
 }
 func Debug(msg string, fields ...zap.Field) {
-	Logger.z.Debug(msg, fields...)
+	Logger.l.Debug(msg, fields...)
 }
 func Warn(msg string, fields ...zap.Field) {
-	Logger.z.Warn(msg, fields...)
+	Logger.l.Warn(msg, fields...)
 }
 func Fatal(msg string, fields ...zap.Field) {
-	Logger.z.Fatal(msg, fields...)
+	Logger.l.Fatal(msg, fields...)
 }
 func Panic(msg string, fields ...zap.Field) {
-	Logger.z.Panic(msg, fields...)
+	Logger.l.Panic(msg, fields...)
 }

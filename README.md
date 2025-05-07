@@ -1,17 +1,6 @@
-# Go Gin Project
+# Gin Hexagonal Example
 
 This is a RESTful API built using the [Gin](https://github.com/gin-gonic/gin) web framework in Go. The project follows **Hexagonal Architecture** to ensure a clean separation of concerns and maintainability.
-
----
-
-## Features
-
-- **Hexagonal Architecture**: Clear separation of core business logic, adapters, and infrastructure.
-- **Gin Framework**: High-performance HTTP web framework.
-- **OpenAPI Integration**: API documentation and code generation using `oapi-codegen`.
-- **Hot Reloading**: Enabled with [Air](https://github.com/cosmtrek/air) for development.
-- **MongoDB**: Database integration with Dockerized MongoDB.
-- **Taskfile**: Simplified task automation for common operations.
 
 ---
 
@@ -29,12 +18,12 @@ Before running the project, ensure you have the following installed:
 
 ## Getting Started
 
-### Clone the Repository
+#### Clone the Repository
 
 ```bash
 git clone https://github.com/D4rk1ink/gin-hexagonal-example
 ```
-### Run the Application
+#### Run the Application
 
 ```bash
 cd gin-hexagonal-example
@@ -110,6 +99,35 @@ Note: Please adjust Authorization header and user id
 curl --location --request DELETE 'http://localhost:8080/api/users/681baf295bf4df5c5f1b5d9c' \
 --header 'Authorization: ••••••'
 ```
+---
+## API Logging
+Below is an example of a log entry generated for an API request:
+
+```json
+{
+  "level": "info",
+  "ts": "2025-05-07T20:08:34Z",
+  "caller": "logger/logger.go:39",
+  "msg": "",
+  "correlation_id": "cb3c0d95-7251-45e9-8c4d-0d123efc24a9",
+  "method": "POST",
+  "path": "/api/auth/register",
+  "status": 409,
+  "duration": 0.001125514
+}
+```
+
+#### Log Fields Explained:
+- **`level`**: The severity level of the log (e.g., `info`, `error`).
+- **`ts`**: The timestamp of the log entry in RFC3339.
+- **`caller`**: The file and line number where the log was generated.
+- **`msg`**: A short message describing the log event.
+- **`correlation_id`**: A unique identifier for tracing the request across services.
+- **`method`**: The HTTP method of the request (e.g., `GET`, `POST`).
+- **`path`**: The API endpoint that was accessed.
+- **`status`**: The HTTP status code returned by the server.
+- **`duration`**: The time taken to process the request (in seconds).
+
 ---
 
 ## Project Structure
