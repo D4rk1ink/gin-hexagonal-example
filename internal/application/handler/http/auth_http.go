@@ -7,17 +7,19 @@ import (
 	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
 	http_mapper "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/mapper"
 	http_util "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/util"
+	custom_error "github.com/D4rk1ink/gin-hexagonal-example/internal/core/error"
 	"github.com/D4rk1ink/gin-hexagonal-example/internal/infrastructure/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/guregu/null"
 )
 
 func (h *httpHandler) Register(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
 	var body http_apigen.RegisterJSONRequestBody
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		httpCode := http.StatusBadRequest
-		http_util.ResponseError(ctx, err, &httpCode)
+	if err := http_util.Validate(ctx, &body); err != nil {
+		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
+		http_util.ResponseError(ctx, err, nil)
 		return
 	}
 
@@ -28,7 +30,7 @@ func (h *httpHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, http_apigen.RegisterRes{
+	ctx.JSON(http.StatusCreated, http_apigen.RegisterRes{
 		Success: true,
 	})
 }
@@ -37,9 +39,9 @@ func (h *httpHandler) Login(ctx *gin.Context) {
 	c := ctx.Request.Context()
 
 	var body http_apigen.LoginJSONRequestBody
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		httpCode := http.StatusBadRequest
-		http_util.ResponseError(ctx, err, &httpCode)
+	if err := http_util.Validate(ctx, &body); err != nil {
+		err = custom_error.NewError(custom_error.ErrBadRequest, null.StringFrom(err.Error()).Ptr())
+		http_util.ResponseError(ctx, err, nil)
 		return
 	}
 

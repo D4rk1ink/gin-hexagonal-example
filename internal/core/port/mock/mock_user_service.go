@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/D4rk1ink/gin-hexagonal-example/internal/core/domain"
+	dto "github.com/D4rk1ink/gin-hexagonal-example/internal/core/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -63,4 +64,19 @@ func (m *MockUserService) GetById(ctx context.Context, id string) (*domain.User,
 func (mr *MockUserServiceMockRecorder) GetById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockUserService)(nil).GetById), ctx, id)
+}
+
+// Update mocks base method.
+func (m *MockUserService) Update(ctx context.Context, userUpdate dto.UserUpdateDto) (*domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, userUpdate)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockUserServiceMockRecorder) Update(ctx, userUpdate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUserService)(nil).Update), ctx, userUpdate)
 }

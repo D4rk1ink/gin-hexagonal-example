@@ -137,7 +137,7 @@ var _ = Describe("Auth Service", Label("Service"), func() {
 			Expect(result).To(BeNil())
 			Expect(err.(custom_error.CustomError).GetCode()).To(Equal(custom_error.ErrUserInvalidateUpdateInput))
 		})
-		FIt("should return error if input data is the same with user data", func() {
+		It("should return error if input data is the same with user data", func() {
 			payload := dto.UserUpdateDto{
 				ID:    users[0].ID,
 				Name:  null.StringFrom(users[0].Name).Ptr(),
@@ -190,8 +190,8 @@ var _ = Describe("Auth Service", Label("Service"), func() {
 		It("should return error if user repo Update return error", func() {
 			payload := dto.UserUpdateDto{
 				ID:    users[0].ID,
-				Name:  null.StringFrom(users[0].Name).Ptr(),
-				Email: null.StringFrom(users[0].Email).Ptr(),
+				Name:  null.StringFrom("new name").Ptr(),
+				Email: null.StringFrom("new@email.com").Ptr(),
 			}
 			mockUserRepo.
 				EXPECT().

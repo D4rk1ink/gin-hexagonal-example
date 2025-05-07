@@ -22,8 +22,8 @@ type ErrorRes struct {
 
 // LoginReq defines model for LoginReq.
 type LoginReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,omitempty"`
+	Password string `json:"password" validate:"required,omitempty"`
 }
 
 // LoginRes defines model for LoginRes.
@@ -35,10 +35,10 @@ type LoginRes struct {
 
 // RegisterReq defines model for RegisterReq.
 type RegisterReq struct {
-	ConfirmPassword string `json:"confirm_password"`
-	Email           string `json:"email"`
-	Name            string `json:"name"`
-	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,omitempty"`
+	Email           string `json:"email" validate:"required,omitempty"`
+	Name            string `json:"name" validate:"required,omitempty"`
+	Password        string `json:"password" validate:"required,omitempty"`
 }
 
 // RegisterRes defines model for RegisterRes.
@@ -69,10 +69,10 @@ type RegisterJSONRequestBody = RegisterReq
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Login a user
-	// (POST /api/login)
+	// (POST /api/auth/login)
 	Login(c *gin.Context)
 	// Register a new user
-	// (POST /api/register)
+	// (POST /api/auth/register)
 	Register(c *gin.Context)
 	// Get all users
 	// (GET /api/users)
@@ -154,7 +154,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.POST(options.BaseURL+"/api/login", wrapper.Login)
-	router.POST(options.BaseURL+"/api/register", wrapper.Register)
+	router.POST(options.BaseURL+"/api/auth/login", wrapper.Login)
+	router.POST(options.BaseURL+"/api/auth/register", wrapper.Register)
 	router.GET(options.BaseURL+"/api/users", wrapper.GetUsers)
 }

@@ -14,6 +14,7 @@ import (
 type HttpHandler interface {
 	http_apigen.ServerInterface
 	SetRouter() error
+	GetRouter() *gin.Engine
 	Listen() error
 }
 
@@ -51,6 +52,10 @@ func (h *httpHandler) SetRouter() error {
 	http_apigen.RegisterHandlers(h.router, h)
 
 	return nil
+}
+
+func (h *httpHandler) GetRouter() *gin.Engine {
+	return h.router
 }
 
 func (h *httpHandler) Listen() error {

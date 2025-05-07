@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	ErrInternalServerError string = "ERR-SYS-500"
-	ErrBadRequest          string = "ERR-SYS-400"
-	ErrUnauthorized        string = "ERR-SYS-401"
-	ErrForbidden           string = "ERR-SYS-403"
-	ErrNotFound            string = "ERR-SYS-404"
+	ErrInternalServerError string = "ERR-APP-500"
+	ErrBadRequest          string = "ERR-APP-400"
+	ErrUnauthorized        string = "ERR-APP-401"
+	ErrForbidden           string = "ERR-APP-403"
+	ErrNotFound            string = "ERR-APP-404"
 )
 
 const (
