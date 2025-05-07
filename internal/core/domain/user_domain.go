@@ -18,7 +18,6 @@ type User struct {
 }
 
 func NewUser(name, email, password string) (*User, error) {
-
 	err := validateEmail(email)
 	if err != nil {
 		return nil, err
@@ -36,13 +35,9 @@ func NewUser(name, email, password string) (*User, error) {
 func validateEmail(email string) error {
 	regexpEmail := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !regexpEmail.MatchString(email) {
-		return err.NewError(err.ErrAuthInvalidEmailFormat, nil)
+		return err.NewError(err.ErrUserInvalidEmailFormat, nil)
 	}
 	return nil
-}
-
-func (u *User) SetId(id string) {
-	u.ID = id
 }
 
 func (u *User) SetName(name string) {
