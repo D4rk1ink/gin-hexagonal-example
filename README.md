@@ -44,7 +44,7 @@ task prod
 
 ## API Documentation
 
-The API is documented using OpenAPI. You can find the specification in the `docs/server/doc.yaml` file or enter to [http://localhost:8080/swagger](http://localhost:8080/swagger) or [Postman Collection](https://github.com/D4rk1ink/gin-hexagonal-example/postman_collection.json). To view the documentation:
+The API is documented using OpenAPI. You can find the specification in the `docs/server/doc.yaml` file or enter to [http://localhost:8080/swagger](http://localhost:8080/swagger) or [Postman Collection](https://github.com/D4rk1ink/gin-hexagonal-example/blob/master/postman_collection.json). To view the documentation:
 
 #### Example API
 
