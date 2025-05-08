@@ -12,7 +12,6 @@ services:
       - APP_ENV=production
     depends_on:
       - db
-    stop_signal: SIGTERM
 
   db:
     # mongodb

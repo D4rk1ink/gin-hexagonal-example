@@ -3,7 +3,7 @@ package http_handler
 import (
 	"context"
 	"fmt"
-	_http "net/http"
+	"net/http"
 	"time"
 
 	http_apigen "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http/apigen"
@@ -24,7 +24,7 @@ type HttpHandler interface {
 }
 
 type httpHandler struct {
-	srv            *_http.Server
+	srv            *http.Server
 	router         *gin.Engine
 	service        *dependency.Service
 	infrastructure *dependency.Infrastructure
@@ -78,11 +78,17 @@ func (h *httpHandler) SetRouter() error {
 
 	// NOTE: This is for testing purposes only
 	h.router.GET("/ping", func(ctx *gin.Context) {
-		logger.Info("Waiting for 20 seconds...")
-		time.Sleep(20 * time.Second)
-		ctx.JSON(_http.StatusOK, gin.H{
-			"message": "Done",
-		})
+		c := ctx.Request.Context()
+
+		logger.Info("Received /ping request")
+		select {
+		case <-time.After(10 * time.Second): // Simulate processing
+			logger.Info("Finished work")
+			ctx.JSON(http.StatusOK, gin.H{"msg": "pong"})
+		case <-c.Done():
+			logger.Info(fmt.Sprintf("Request cancelled: %v", c.Err()))
+			ctx.JSON(http.StatusRequestTimeout, gin.H{"error": "request cancelled"})
+		}
 	})
 
 	return nil
@@ -107,7 +113,7 @@ func (h *httpHandler) Listen() error {
 func (h *httpHandler) ListenAndServe() error {
 	h.SetRouter()
 
-	h.srv = &_http.Server{
+	h.srv = &http.Server{
 		Addr:    ":" + config.Config.App.Port,
 		Handler: h.router.Handler(),
 	}
