@@ -6,6 +6,7 @@ import (
 	_http "net/http"
 	"os/signal"
 	"syscall"
+	"time"
 
 	http_handler "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/http"
 	scheduler_handler "github.com/D4rk1ink/gin-hexagonal-example/internal/application/handler/scheduler"
@@ -34,13 +35,15 @@ func main() {
 
 	<-ctx.Done()
 	logger.Info("Received shutdown signal, shutting down server...")
-	if err := scheduleHandler.Shutdown(ctx); err != nil {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := scheduleHandler.Shutdown(shutdownCtx); err != nil {
 		logger.Error(fmt.Sprintf("Scheduler shutdown error: %v", err))
 	}
-	if err := httpHandler.Shutdown(ctx); err != nil {
+	if err := httpHandler.Shutdown(shutdownCtx); err != nil {
 		logger.Error(fmt.Sprintf("HTTP server shutdown error: %v", err))
 	}
-	if err := dep.Infrastructure.Database.Disconnect(ctx); err != nil {
+	if err := dep.Infrastructure.Database.Disconnect(shutdownCtx); err != nil {
 		logger.Error(fmt.Sprintf("Database shutdown error: %v", err))
 	}
 	logger.Info("Server shutdown gracefully")
